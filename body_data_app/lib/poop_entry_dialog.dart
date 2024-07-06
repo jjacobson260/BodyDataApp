@@ -19,7 +19,7 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
       'blood': _blood ? 1 : 0,
     };
 
-    await DatabaseHelper().insertRecord(record);
+    await DatabaseHelper().insertPoopData(record);
     Navigator.of(context).pop();
   }
 

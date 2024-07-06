@@ -61,4 +61,11 @@ class DatabaseHelper {
     final db = await database;
     return await db.query('pill_data');
   }
+
+  Future<List<String>> getPillNames() async {
+    final db = await database;
+    var result = await db.rawQuery('SELECT DISTINCT pill_name FROM pill_data');
+    List<String> pillNames = result.map((e) => e['pill_name'] as String).toList();
+    return pillNames;
+  }
 }

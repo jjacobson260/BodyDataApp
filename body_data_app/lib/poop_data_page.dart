@@ -15,7 +15,7 @@ class _PoopDataPageState extends State<PoopDataPage> {
   List<Map<String, dynamic>> _records = [];
 
   void _retrieveRecords() async {
-    final records = await DatabaseHelper().getRecords();
+    final records = await DatabaseHelper().getPoopData();
     setState(() {
       _records = records;
     });

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'database_helper.dart';
 
 class PillEntryDialog extends StatefulWidget {
@@ -7,87 +8,91 @@ class PillEntryDialog extends StatefulWidget {
 }
 
 class _PillEntryDialogState extends State<PillEntryDialog> {
-  int? _bristolRating;
-  int? _urgency;
-  String _unit;
+  final _formKey = GlobalKey<FormState>();
+  String _pillName = '';
+  String _dosage = '';
+  String _unit = '';
 
-  void _submit() async {
-    final record = {
-      'timestamp': DateTime.now().toIso8601String(),
-      'pill': _bristolRating,
-      'dose': _urgency,
-      'unit': _blood ? 1 : 0,
-    };
+  Future<void> _savePillData() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
 
-    await DatabaseHelper().insertRecord(record);
-    Navigator.of(context).pop();
+      String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+
+      Map<String, dynamic> pillData = {
+        'timestamp': timestamp,
+        'pill_name': _pillName,
+        'dosage': _dosage,
+        'unit': _unit,
+      };
+
+      await DatabaseHelper().insertPillData(pillData);
+
+      Navigator.of(context).pop(); // Close the dialog
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Pill data saved'),
+      ));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Log Your Pill'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Pill'),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List<Widget>.generate(7, (int index) {
-              return Column(
-                  children: [
-                    Text('${index + 1}'),
-                    Radio<int>(
-                      value: index + 1,
-                      groupValue: _bristolRating,
-                      onChanged: (int? value) {
-                        setState(() {
-                          _bristolRating = value;
-                        });
-                      },
-                    )
-                  ],
-                );
-            }),
-          ),
-          Text('Urgency'),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List<Widget>.generate(7, (int index) {
-              return Column(
-                children: [
-                  Text('${index + 1}'),
-                  Radio<int>(
-                    value: index + 1,
-                    groupValue: _urgency,
-                    onChanged: (int? value) {
-                      setState(() {
-                        _urgency = value;
-                      });
-                    },
-                  ),
-                ] 
-              );
-            }),
-          ),
-          CheckboxListTile(
-            title: Text('Blood'),
-            value: _blood,
-            onChanged: (bool? value) {
-              setState(() {
-                _blood = value!;
-              });
-            },
-          ),
-        ],
+      title: Text('Enter Pill Data'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Pill Name'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a pill name';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                _pillName = value!;
+              },
+            ),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Dosage'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the dosage';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                _dosage = value!;
+              },
+            ),
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Unit'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the unit';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                _unit = value!;
+              },
+            ),
+          ],
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+      actions: <Widget>[
+        ElevatedButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
           child: Text('Cancel'),
         ),
-        TextButton(
-          onPressed: _submit,
+        ElevatedButton(
+          onPressed: _savePillData,
           child: Text('Submit'),
         ),
       ],

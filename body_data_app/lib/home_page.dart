@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'poop_entry_dialog.dart';
 import 'poop_data_page.dart';
+import 'pill_entry_dialog.dart';
+import 'pill_data_page.dart';
 
 class HomePage extends StatelessWidget {
   void _openPoopDialog(BuildContext context) {
@@ -60,6 +62,7 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
+            SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
