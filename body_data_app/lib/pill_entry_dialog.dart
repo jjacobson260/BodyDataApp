@@ -9,19 +9,35 @@ class PillEntryDialog extends StatefulWidget {
 
 class _PillEntryDialogState extends State<PillEntryDialog> {
   final _formKey = GlobalKey<FormState>();
-  String _pillName = '';
+  String _selectedPillName = '';
+  String _newPillName = '';
   String _dosage = '';
   String _unit = '';
+  List<String> _pillNames = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPillNames();
+  }
+
+  Future<void> _fetchPillNames() async {
+    List<String> names = await DatabaseHelper().getPillNames();
+    setState(() {
+      _pillNames = names;
+    });
+  }
 
   Future<void> _savePillData() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
+      String pillName = _selectedPillName == 'New Pill' ? _newPillName : _selectedPillName;
       String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
       Map<String, dynamic> pillData = {
         'timestamp': timestamp,
-        'pill_name': _pillName,
+        'pill_name': pillName,
         'dosage': _dosage,
         'unit': _unit,
       };
@@ -45,18 +61,46 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            TextFormField(
+            DropdownButtonFormField<String>(
+              value: _selectedPillName.isNotEmpty ? _selectedPillName : null,
               decoration: InputDecoration(labelText: 'Pill Name'),
+              items: _pillNames.map((name) {
+                return DropdownMenuItem<String>(
+                  value: name,
+                  child: Text(name),
+                );
+              }).toList()
+              ..add(
+                DropdownMenuItem<String>(
+                  value: 'New Pill',
+                  child: Text('Add New Pill'),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _selectedPillName = value!;
+                });
+              },
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a pill name';
+                if ((value == null || value.isEmpty) && _newPillName.isEmpty) {
+                  return 'Please select or enter a pill name';
                 }
                 return null;
               },
-              onSaved: (value) {
-                _pillName = value!;
-              },
             ),
+            if (_selectedPillName == 'New Pill')
+              TextFormField(
+                decoration: InputDecoration(labelText: 'New Pill Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a new pill name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _newPillName = value!;
+                },
+              ),
             TextFormField(
               decoration: InputDecoration(labelText: 'Dosage'),
               validator: (value) {
@@ -93,7 +137,7 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
         ),
         ElevatedButton(
           onPressed: _savePillData,
-          child: Text('Submit'),
+          child: Text('Save'),
         ),
       ],
     );
