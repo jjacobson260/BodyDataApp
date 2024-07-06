@@ -121,7 +121,7 @@ class HomePage extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () => _openFoodDialog(context),
-                  child: Text('🍲'),
+                  child: Text('🥣'),
                 ),
                 SizedBox(width: 20),
                 ElevatedButton(

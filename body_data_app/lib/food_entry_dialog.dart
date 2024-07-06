@@ -80,11 +80,11 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
               children: [
                 ElevatedButton(
                   onPressed: () => _pickImage(ImageSource.camera),
-                  child: Text('Take Photo'),
+                  child: Text('📷'),
                 ),
                 ElevatedButton(
                   onPressed: () => _pickImage(ImageSource.gallery),
-                  child: Text('Select Photo'),
+                  child: Text('🖼️'),
                 ),
               ],
             ),
@@ -107,7 +107,7 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
         ),
         ElevatedButton(
           onPressed: _saveFoodData,
-          child: Text('Submit'),
+          child: Text('Save'),
         ),
       ],
     );

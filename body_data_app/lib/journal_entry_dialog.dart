@@ -61,7 +61,7 @@ class _JournalEntryDialogState extends State<JournalEntryDialog> {
         ),
         ElevatedButton(
           onPressed: _saveJournalData,
-          child: Text('Submit'),
+          child: Text('Save'),
         ),
       ],
     );
