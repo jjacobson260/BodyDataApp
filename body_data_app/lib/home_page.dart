@@ -55,7 +55,7 @@ class HomePage extends StatelessWidget {
                   onPressed: () => _openPoopDialog(context),
                   child: Text('💩'),
                 ),
-                SizedBox(height: 16), // Add spacing between buttons
+                SizedBox(width: 16), // Add spacing between buttons
                 ElevatedButton(
                   onPressed: () => _navigateToPoopDataPage(context), // Wrap in lambda function
                   child: Text('Data'),
@@ -70,7 +70,7 @@ class HomePage extends StatelessWidget {
                   onPressed: () => _openPillDialog(context),
                   child: Text('💊'),
                 ),
-                SizedBox(height: 16), // Add spacing between buttons
+                SizedBox(width: 16), // Add spacing between buttons
                 ElevatedButton(
                   onPressed: () => _navigateToPillDataPage(context), // Wrap in lambda function
                   child: Text('Data'),
