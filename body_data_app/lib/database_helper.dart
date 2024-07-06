@@ -38,6 +38,21 @@ class DatabaseHelper {
             unit TEXT
           )
         ''');
+        await db.execute('''
+          CREATE TABLE food_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            description TEXT,
+            image_path TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE journal_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            entry TEXT
+          )
+        ''');
       },
     );
   }
@@ -67,5 +82,25 @@ class DatabaseHelper {
     var result = await db.rawQuery('SELECT DISTINCT pill_name FROM pill_data');
     List<String> pillNames = result.map((e) => e['pill_name'] as String).toList();
     return pillNames;
+  }
+
+  Future<void> insertFoodData(Map<String, dynamic> foodData) async {
+    final db = await database;
+    await db.insert('food_data', foodData, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, dynamic>>> getFoodData() async {
+    final db = await database;
+    return await db.query('food_data', orderBy: 'timestamp DESC');
+  }
+
+  Future<void> insertJournalData(Map<String, dynamic> journalData) async {
+    final db = await database;
+    await db.insert('journal_data', journalData, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, dynamic>>> getJournalData() async {
+    final db = await database;
+    return await db.query('journal_data', orderBy: 'timestamp DESC');
   }
 }
