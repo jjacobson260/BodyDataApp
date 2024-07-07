@@ -84,69 +84,64 @@ class HomePage extends StatelessWidget {
         title: Text('Body Data'),
       ),
       body: Center(
-        child: Column(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                ElevatedButton(
-                  onPressed: () => _openPoopDialog(context),
-                  child: Text('💩'),
-                ),
-                SizedBox(width: 20), // Add spacing between buttons
-                ElevatedButton(
-                  onPressed: () => _navigateToPoopDataPage(context), // Wrap in lambda function
-                  child: Text('Data'),
-                ),
-              ],
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _openPoopDialog(context),
+                    child: Text('💩'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _openPillDialog(context),
+                    child: Text('💊'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _openFoodDialog(context),
+                    child: Text('🥣'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _openJournalDialog(context),
+                    child: Text('📝'),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                ElevatedButton(
-                  onPressed: () => _openPillDialog(context),
-                  child: Text('💊'),
-                ),
-                SizedBox(width: 20), // Add spacing between buttons
-                ElevatedButton(
-                  onPressed: () => _navigateToPillDataPage(context), // Wrap in lambda function
-                  child: Text('Data'),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () => _openFoodDialog(context),
-                  child: Text('🥣'),
-                ),
-                SizedBox(width: 20),
-                ElevatedButton(
-                  onPressed: () => _navigateToFoodDataPage(context),
-                  child: Text('Food Data'),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () => _openJournalDialog(context),
-                  child: Text('📝'),
-                ),
-                SizedBox(width: 20),
-                ElevatedButton(
-                  onPressed: () => _navigateToJournalDataPage(context),
-                  child: Text('Journal Data'),
-                ),
-              ],
+            SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _navigateToPoopDataPage(context), // Wrap in lambda function
+                    child: Text('Poop Data'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _navigateToPillDataPage(context), // Wrap in lambda function
+                    child: Text('Pill Data'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _navigateToFoodDataPage(context),
+                    child: Text('Food Data'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _navigateToJournalDataPage(context),
+                    child: Text('Journal'),
+                  ),
+                ],
+              ),
             ),
           ],
-        )
+        ),
       ),
     );
   }

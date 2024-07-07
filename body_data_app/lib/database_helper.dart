@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -15,13 +16,15 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'body_data.db');
+    var documentsDirectory = await getApplicationDocumentsDirectory();
+    String path = join(documentsDirectory.path, 'body_data.db');
+
     return await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
-          CREATE TABLE poop_data (
+          CREATE TABLE IF NOT EXISTS poop_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             bristol_rating INTEGER,
@@ -30,7 +33,7 @@ class DatabaseHelper {
           )
         ''');
         await db.execute('''
-          CREATE TABLE pill_data (
+          CREATE TABLE IF NOT EXISTS pill_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             pill_name TEXT,
@@ -39,7 +42,7 @@ class DatabaseHelper {
           )
         ''');
         await db.execute('''
-          CREATE TABLE food_data (
+          CREATE TABLE IF NOT EXISTS food_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             description TEXT,
@@ -47,7 +50,7 @@ class DatabaseHelper {
           )
         ''');
         await db.execute('''
-          CREATE TABLE journal_data (
+          CREATE TABLE IF NOT EXISTS journal_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             entry TEXT
@@ -65,6 +68,34 @@ class DatabaseHelper {
   Future<int> insertPillData(Map<String, dynamic> data) async {
     final db = await database;
     return await db.insert('pill_data', data);
+  }
+
+  Future<Map<String, String?>> getPillDetails(String pillName) async {
+    final db = await database;
+    List<Map<String, dynamic>> result = await db.query(
+      'pill_data',
+      columns: ['dosage', 'unit'],
+      where: 'pill_name = ?',
+      whereArgs: [pillName],
+      orderBy: 'timestamp DESC',
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) {
+      return {
+        'dosage': result.first['dosage'] as String?,
+        'unit': result.first['unit'] as String?,
+      };
+    }
+
+    return {'dosage': null, 'unit': null};
+  }
+
+  Future<List<String>> getPillUnits() async {
+    final db = await database;
+    var result = await db.rawQuery('SELECT DISTINCT unit FROM pill_data');
+    List<String> pillUnits = result.map((e) => e['unit'] as String).toList();
+    return pillUnits;
   }
 
   Future<List<Map<String, dynamic>>> getPoopData() async {

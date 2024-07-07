@@ -122,10 +122,7 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
                 onPressed: _saveData,
                 child: Text('Save'),
               ),
-            )
-            
-        
-            
+            )  
           ],
         ),
       )

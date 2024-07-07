@@ -26,7 +26,7 @@ class _JournalDataPageState extends State<JournalDataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Journal Data'),
+        title: Text('Journal'),
       ),
       body: ListView.builder(
         itemCount: _journalData.length,
