@@ -11,7 +11,7 @@ class _JournalEntryDialogState extends State<JournalEntryDialog> {
   final _formKey = GlobalKey<FormState>();
   String _entry = '';
 
-  Future<void> _saveJournalData() async {
+  Future<void> _saveData() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
@@ -53,16 +53,13 @@ class _JournalEntryDialogState extends State<JournalEntryDialog> {
         ),
       ),
       actions: <Widget>[
-        ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _saveJournalData,
-          child: Text('Save'),
-        ),
+        Align(
+          alignment: Alignment.center,
+          child: ElevatedButton(
+            onPressed: _saveData,
+            child: Text('Save'),
+          ),
+        )
       ],
     );
   }

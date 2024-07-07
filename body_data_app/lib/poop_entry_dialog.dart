@@ -12,7 +12,7 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
   double _urgency = 1.0;
   bool _blood = false;
 
-  void _submitData() async {
+  void _saveData() async {
     final now = DateTime.now();
     final formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
 
@@ -116,10 +116,14 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
                 Text('Blood'),
               ],
             ),
-            ElevatedButton(
-              onPressed: _submitData,
-              child: Text('Submit'),
-            ),
+            Align(
+              alignment: Alignment.center,
+              child: ElevatedButton(
+                onPressed: _saveData,
+                child: Text('Save'),
+              ),
+            )
+            
         
             
           ],

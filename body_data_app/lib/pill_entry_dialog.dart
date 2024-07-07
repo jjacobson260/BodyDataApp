@@ -28,7 +28,7 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
     });
   }
 
-  Future<void> _savePillData() async {
+  Future<void> _saveData() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
@@ -125,21 +125,14 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
                 _unit = value!;
               },
             ),
+            SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _saveData,
+              child: Text('Save'),
+            ),
           ],
         ),
       ),
-      actions: <Widget>[
-        ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _savePillData,
-          child: Text('Save'),
-        ),
-      ],
     );
   }
 }
