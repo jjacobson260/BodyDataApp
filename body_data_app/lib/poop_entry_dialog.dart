@@ -8,16 +8,16 @@ class PoopEntryDialog extends StatefulWidget {
 }
 
 class _PoopEntryDialogState extends State<PoopEntryDialog> {
-  double _bristolRating = 1.0;
-  double _urgency = 1.0;
-  bool _blood = false;
+  final _formKey = GlobalKey<FormState>();
+  int _bristolRating = 3; // Initial value for Bristol Rating
+  int _urgency = 3; // Initial value for Urgency
+  bool _blood = false; // Initial value for Blood checkbox
 
   void _saveData() async {
-    final now = DateTime.now();
-    final formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    final timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
     final data = {
-      'timestamp': formattedDate,
+      'timestamp': timestamp,
       'bristol_rating': _bristolRating,
       'urgency': _urgency,
       'blood': _blood ? 1 : 0,
@@ -27,84 +27,48 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
 
     Navigator.of(context).pop();
   }
-  /*
-  Widget _buildSliderWithLabels(String label, double value, Function(double) onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(7, (index) => Text('${index + 1}')),
-        ),
-        Row(
-          children: [
-            Text(value.toStringAsFixed(1)),
-            Expanded(
-              child: Slider(
-                value: value,
-                min: 1.0,
-                max: 7.0,
-                divisions: 60, // Provides more granularity to select from 1.0 to 7.0
-                onChanged: onChanged,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-  */
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Enter Poop Data'),
-      content: SingleChildScrollView(
+      content: Form(
+        key: _formKey,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Bristol Rating'),
-            Row(
-              children: [
-                Text(_bristolRating.toStringAsFixed(1)),
-                Expanded(
-                  child: Slider(
-                    value: _bristolRating,
-                    min: 1.0,
-                    max: 7.0,
-                    divisions: 60, // Provides more granularity to select from 1.0 to 7.0
-                    onChanged: (value) {
-                      setState(() {
-                        _bristolRating = value;
-                      });
-                    },
-                  ),
-                ),
-              ],
+          children: <Widget>[
+            Text('Bristol Rating: $_bristolRating'),
+            Slider(
+              value: _bristolRating.toDouble(),
+              min: 1,
+              max: 7,
+              divisions: 6,
+              label: '$_bristolRating',
+              onChanged: (value) {
+                setState(() {
+                  _bristolRating = value.toInt();
+                });
+              },
             ),
             SizedBox(height: 16),
-            Text('Urgency'),
-            Row(
-              children: [
-                Text(_urgency.toStringAsFixed(1)),
-                Expanded(
-                  child: Slider(
-                    value: _urgency,
-                    min: 1.0,
-                    max: 7.0,
-                    divisions: 60, // Provides more granularity to select from 1.0 to 7.0
-                    onChanged: (value) {
-                      setState(() {
-                        _urgency = value;
-                      });
-                    },
-                  ),
-                ),
-              ],
+            Text('Urgency: $_urgency'),
+            Slider(
+              value: _urgency.toDouble(),
+              min: 1,
+              max: 7,
+              divisions: 6,
+              label: '$_urgency',
+              onChanged: (value) {
+                setState(() {
+                  _urgency = value.toInt();
+                });
+              },
             ),
             SizedBox(height: 16),
             Row(
               children: [
+                Text('Blood: '),
                 Checkbox(
                   value: _blood,
                   onChanged: (value) {
@@ -113,19 +77,16 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
                     });
                   },
                 ),
-                Text('Blood'),
               ],
             ),
-            Align(
-              alignment: Alignment.center,
-              child: ElevatedButton(
-                onPressed: _saveData,
-                child: Text('Save'),
-              ),
-            )  
+            SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _saveData,
+              child: Text('Save'),
+            ),
           ],
         ),
-      )
+      ),
     );
   }
 }

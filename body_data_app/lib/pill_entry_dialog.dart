@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
+import 'date_time_picker_dialog.dart'; // Import your DateTimePickerDialog
 
 class PillEntryDialog extends StatefulWidget {
   @override
@@ -16,6 +17,7 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
   String _newUnit = '';
   List<String> _pillNames = [];
   List<String> _pillUnits = ['mg', 'count'];
+  DateTime _selectedDateTime = DateTime.now(); // Track selected datetime
 
   @override
   void initState() {
@@ -53,7 +55,7 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
 
       String pillName = _selectedPillName == 'New Pill' ? _newPillName : _selectedPillName;
       String unit = _selectedUnit == 'New Unit' ? _newUnit : _selectedUnit;
-      String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+      String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
 
       Map<String, dynamic> pillData = {
         'timestamp': timestamp,
@@ -75,7 +77,20 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Enter Pill Data'),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Enter Pill Data'),
+          DateTimePickerDialog(
+            initialDateTime: _selectedDateTime,
+            onDateTimeSelected: (dateTime) {
+              setState(() {
+                _selectedDateTime = dateTime;
+              });
+            },
+          ),
+        ],
+      ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -91,12 +106,12 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
                     child: Text(name),
                   );
                 }).toList()
-                ..add(
-                  DropdownMenuItem<String>(
-                    value: 'New Pill',
-                    child: Text('Add New Pill'),
+                  ..add(
+                    DropdownMenuItem<String>(
+                      value: 'New Pill',
+                      child: Text('Add New Pill'),
+                    ),
                   ),
-                ),
                 onChanged: (value) {
                   setState(() {
                     _selectedPillName = value!;
@@ -153,12 +168,12 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
                     child: Text(unit),
                   );
                 }).toList()
-                ..add(
-                  DropdownMenuItem<String>(
-                    value: 'New Unit',
-                    child: Text('Add New Unit'),
+                  ..add(
+                    DropdownMenuItem<String>(
+                      value: 'New Unit',
+                      child: Text('Add New Unit'),
+                    ),
                   ),
-                ),
                 onChanged: (value) {
                   setState(() {
                     _selectedUnit = value!;

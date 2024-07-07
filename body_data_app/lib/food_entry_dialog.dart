@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
+import 'date_time_picker_dialog.dart'; // Import your DateTimePickerDialog
 
 class FoodEntryDialog extends StatefulWidget {
   @override
@@ -11,86 +11,71 @@ class FoodEntryDialog extends StatefulWidget {
 }
 
 class _FoodEntryDialogState extends State<FoodEntryDialog> {
-  String _description = '';
-  File? _image;
-  
-  final picker = ImagePicker();
+  final _formKey = GlobalKey<FormState>();
+  TextEditingController _descriptionController = TextEditingController();
+  DateTime _selectedDateTime = DateTime.now(); // Track selected datetime
+  File? _imageFile;
 
-  void _saveData() async {
-    final now = DateTime.now();
-    final formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+  Future<void> _saveFoodData() async {
+    String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
 
-    final data = {
-      'timestamp': formattedDate,
-      'description': _description,
-      'image_path': _image?.path, // Store image path if it exists
+    Map<String, dynamic> foodData = {
+      'timestamp': timestamp,
+      'description': _descriptionController.text,
+      // Handle image file saving as per your implementation
     };
 
-    await DatabaseHelper().insertFoodData(data);
+    await DatabaseHelper().insertFoodData(foodData);
 
-    Navigator.of(context).pop();
-  }
+    Navigator.of(context).pop(); // Close the dialog
 
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await picker.pickImage(source: source);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      } else {
-        print('No image selected.');
-      }
-    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Food data saved'),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Enter Food Data'),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Enter Food Data'),
+          DateTimePickerDialog(
+            initialDateTime: _selectedDateTime,
+            onDateTimeSelected: (dateTime) {
+              setState(() {
+                _selectedDateTime = dateTime;
+              });
+            },
+          ),
+        ],
+      ),
       content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              decoration: InputDecoration(labelText: 'Description'),
-              onChanged: (value) {
-                setState(() {
-                  _description = value;
-                });
-              },
-            ),
-            SizedBox(height: 16),
-            _image != null
-                ? Image.file(
-                    _image!,
-                    width: 200,
-                    height: 200,
-                    fit: BoxFit.cover,
-                  )
-                : SizedBox.shrink(),
-            SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ElevatedButton(
-                  onPressed: () => _pickImage(ImageSource.camera),
-                  child: Text('📷'),
-                ),
-                ElevatedButton(
-                  onPressed: () => _pickImage(ImageSource.gallery),
-                  child: Text('🖼️'),
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Align(
-              alignment: Alignment.center,
-              child: ElevatedButton(
-                onPressed: _saveData,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a description';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 16),
+              // Add image selection widget or logic here
+              ElevatedButton(
+                onPressed: _saveFoodData,
                 child: Text('Save'),
               ),
-            )
-          ],
+            ],
+          ),
         ),
       ),
     );
