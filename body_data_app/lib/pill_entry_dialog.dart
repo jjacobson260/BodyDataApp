@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
-import 'date_time_picker_dialog.dart'; // Import your DateTimePickerDialog
+import 'date_time_picker_dialog.dart'; 
 
 class PillEntryDialog extends StatefulWidget {
   @override
@@ -200,10 +200,13 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
                   },
                 ),
               SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: _savePillData,
-                child: Text('Save'),
-              ),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _savePillData,
+                  child: Text('Save'),
+                ),
+              )
+              
             ],
           ),
         ),

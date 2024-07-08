@@ -8,6 +8,7 @@ import 'poop_data_page.dart';
 import 'pill_data_page.dart';
 import 'food_data_page.dart';
 import 'journal_data_page.dart';
+import 'database_helper.dart';
 import 'dart:io';
 
 void main() async {
@@ -16,6 +17,9 @@ void main() async {
   // Request necessary permissions
   await requestPermissions();
 
+  // Initialize Database
+  //DatabaseHelper db_helper;
+  //await db_helper._initDatabase();
   // Initialize the appropriate database factory
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     // Initialize sqflite_common_ffi for desktop

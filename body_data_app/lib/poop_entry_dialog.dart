@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
+import 'date_time_picker_dialog.dart';
 
 class PoopEntryDialog extends StatefulWidget {
   @override
@@ -12,10 +13,10 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
   int _bristolRating = 3; // Initial value for Bristol Rating
   int _urgency = 3; // Initial value for Urgency
   bool _blood = false; // Initial value for Blood checkbox
+  DateTime _selectedDateTime = DateTime.now(); 
 
   void _saveData() async {
-    final timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-
+    String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
     final data = {
       'timestamp': timestamp,
       'bristol_rating': _bristolRating,
@@ -31,7 +32,20 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Enter Poop Data'),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Enter Poop Data'),
+          DateTimePickerDialog(
+            initialDateTime: _selectedDateTime,
+            onDateTimeSelected: (dateTime) {
+              setState(() {
+                _selectedDateTime = dateTime;
+              });
+            },
+          ),
+        ],
+      ),
       content: Form(
         key: _formKey,
         child: Column(
@@ -80,10 +94,13 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
               ],
             ),
             SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _saveData,
-              child: Text('Save'),
+            Center(
+              child: ElevatedButton(
+                onPressed: _saveData,
+                child: Text('Save'),
+              ),
             ),
+            
           ],
         ),
       ),

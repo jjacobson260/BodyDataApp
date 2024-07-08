@@ -40,7 +40,7 @@ class _JournalEntryDialogState extends State<JournalEntryDialog> {
         key: _formKey,
         child: TextFormField(
           decoration: InputDecoration(labelText: 'Journal Entry'),
-          maxLines: 10,
+          maxLines: 100,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please enter a journal entry';

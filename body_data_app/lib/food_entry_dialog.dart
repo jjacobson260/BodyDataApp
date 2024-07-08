@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
@@ -14,7 +14,10 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController _descriptionController = TextEditingController();
   DateTime _selectedDateTime = DateTime.now(); // Track selected datetime
-  File? _imageFile;
+  File? _image;
+
+  final picker = ImagePicker();
+
 
   Future<void> _saveFoodData() async {
     String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
@@ -22,6 +25,7 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
     Map<String, dynamic> foodData = {
       'timestamp': timestamp,
       'description': _descriptionController.text,
+      'image_path': _image?.path,
       // Handle image file saving as per your implementation
     };
 
@@ -32,6 +36,18 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Food data saved'),
     ));
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await picker.pickImage(source: source);
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      } else {
+        print('No image selected.');
+      }
+    });
   }
 
   @override
@@ -68,12 +84,28 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
                   return null;
                 },
               ),
+              SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _pickImage(ImageSource.camera),
+                    child: Text('📷'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _pickImage(ImageSource.gallery),
+                    child: Text('🖼️'),
+                  ),
+                ],
+              ),
               SizedBox(height: 16),
               // Add image selection widget or logic here
-              ElevatedButton(
-                onPressed: _saveFoodData,
-                child: Text('Save'),
-              ),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _saveFoodData,
+                  child: Text('Save'),
+                ),
+              )          
             ],
           ),
         ),

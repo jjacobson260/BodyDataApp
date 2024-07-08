@@ -5,6 +5,8 @@ import 'pill_entry_dialog.dart';
 import 'pill_data_page.dart';
 import 'food_entry_dialog.dart';
 import 'food_data_page.dart';
+import 'mood_entry_dialog.dart';
+import 'mood_data_page.dart';
 import 'journal_entry_dialog.dart';
 import 'journal_data_page.dart';
 
@@ -60,6 +62,23 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  void _openMoodDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return MoodEntryDialog();
+      },
+    );
+  }
+
+  void _navigateToMoodDataPage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => MoodDataPage(),
+      ),
+    );
+  }
+
   void _openJournalDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -107,6 +126,11 @@ class HomePage extends StatelessWidget {
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
+                    onPressed: () => _openMoodDialog(context),
+                    child: Text('🎭'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
                     onPressed: () => _openJournalDialog(context),
                     child: Text('📝'),
                   ),
@@ -131,6 +155,11 @@ class HomePage extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () => _navigateToFoodDataPage(context),
                     child: Text('Food Data'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _navigateToMoodDataPage(context),
+                    child: Text('Mood Data'),
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
