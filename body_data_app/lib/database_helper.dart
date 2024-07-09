@@ -2,6 +2,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:logging/logging.dart';
+import 'package:intl/intl.dart';
+
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -78,6 +80,15 @@ class DatabaseHelper {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             export_type TEXT,
             last_export TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS sleep_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            sleep_time TEXT,
+            dream_log TEXT,
+            STILL_ASLEEP INTEGER
           )
         ''');
       },
@@ -243,5 +254,44 @@ class DatabaseHelper {
     final db = await database;
     _logger.info('Querying all journal data');
     return await db.query('journal_data', orderBy: 'timestamp DESC');
+  }
+
+  Future<void> insertSleepData({required String timestamp, required String sleepTime, String? wakeTime, String? dreamLog, bool wakingUp = false,}) async {
+    final db = await database;
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS sleep_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT,
+        sleep_time TEXT,
+        dream_log TEXT,
+        STILL_ASLEEP INTEGER
+      )
+    ''');
+    await db.insert(
+      'sleep_log',
+      {
+        'timestamp': timestamp,
+        'sleep_time': sleepTime,
+        'wake_time': wakeTime,
+        'dream_log': dreamLog,
+        'STILL_ASLEEP': wakingUp ? 0 : 1,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateSleepLog(int id, DateTime adjustedSleepTime, DateTime wakeTime, String dreamLog) async {
+    final db = await database;
+    await db.update(
+      'sleep_log',
+      {
+        'wake_time': DateFormat('yyyy-MM-dd HH:mm:ss').format(wakeTime),
+        'sleep_time': DateFormat('yyyy-MM-dd HH:mm:ss').format(adjustedSleepTime),
+        'dream_log': dreamLog,
+        'STILL_ASLEEP': 0,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

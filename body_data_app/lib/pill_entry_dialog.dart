@@ -15,14 +15,14 @@ class PillEntryDialog extends StatefulWidget {
 
 class _PillEntryDialogState extends State<PillEntryDialog> {
   final _formKey = GlobalKey<FormState>();
-  late String _selectedPillName;
+  late String _selectedPillName = '';
   String _newPillName = '';
   late String _dosage = '';
   late String _selectedUnit = '';
   String _newUnit = '';
   List<String> _pillNames = [];
   List<String> _pillUnits = ['mg', 'count'];
-  late DateTime _selectedDateTime;
+  late DateTime _selectedDateTime = DateTime.now();
 
   @override
   void initState() {

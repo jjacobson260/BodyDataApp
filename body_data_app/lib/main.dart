@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter/services.dart';
 import 'home_page.dart';
 import 'poop_data_page.dart';
 import 'pill_data_page.dart';
 import 'food_data_page.dart';
 import 'journal_data_page.dart';
+import 'sleep_data_page.dart';
+import 'mood_data_page.dart';
 import 'database_helper.dart';
 import 'dart:io';
 
@@ -72,6 +75,8 @@ class MyApp extends StatelessWidget {
         '/pillData': (context) => PillDataPage(),
         '/journalData': (context) => JournalDataPage(),
         '/foodData': (context) => FoodDataPage(),
+        '/moodData': (context) => MoodDataPage(),
+        '/sleepData': (context) => SleepDataPage(),
       },
     );
   }
