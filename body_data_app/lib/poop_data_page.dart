@@ -3,6 +3,7 @@ import 'package:csv/csv.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
+import 'poop_entry_dialog.dart';
 import 'database_helper.dart';
 import 'export_helper.dart'; // Ensure this helper handles export logic
 
@@ -59,6 +60,24 @@ class _PoopDataPageState extends State<PoopDataPage> {
     );
   }
 
+  Future<void> _editRecord(Map<String, dynamic> record) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return PoopEntryDialog(
+          isEditMode: true,
+          initialData: record,
+        );
+      },
+    );
+    _retrieveRecords();
+  }
+
+  Future<void> _deleteRecord(int id) async {
+    await DatabaseHelper().deletePoopData(id);
+    _retrieveRecords();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,6 +113,23 @@ class _PoopDataPageState extends State<PoopDataPage> {
                   title: Text('Timestamp: ${record['timestamp']}'),
                   subtitle: Text(
                       'Bristol Rating: ${record['bristol_rating']}\nUrgency: ${record['urgency']}\nBlood: ${record['blood'] == 1 ? "Yes" : "No"}'),
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'Edit') {
+                        _editRecord(record);
+                      } else if (value == 'Delete') {
+                        _deleteRecord(record['id']);
+                      }
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return {'Edit', 'Delete'}.map((String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice),
+                        );
+                      }).toList();
+                    },
+                  ),
                 );
               },
             ),

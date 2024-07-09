@@ -4,16 +4,37 @@ import 'database_helper.dart';
 import 'date_time_picker_dialog.dart';
 
 class PoopEntryDialog extends StatefulWidget {
+  final bool isEditMode;
+  final Map<String, dynamic>? initialData;
+
+  PoopEntryDialog({this.isEditMode=false, this.initialData});
+
   @override
   _PoopEntryDialogState createState() => _PoopEntryDialogState();
 }
 
 class _PoopEntryDialogState extends State<PoopEntryDialog> {
   final _formKey = GlobalKey<FormState>();
-  int _bristolRating = 3; // Initial value for Bristol Rating
-  int _urgency = 3; // Initial value for Urgency
-  bool _blood = false; // Initial value for Blood checkbox
-  DateTime _selectedDateTime = DateTime.now(); 
+  late int _bristolRating;
+  late int _urgency;
+  late bool _blood;
+  late DateTime _selectedDateTime;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isEditMode && widget.initialData != null) {
+      _bristolRating = widget.initialData!['bristol_rating'];
+      _urgency = widget.initialData!['urgency'];
+      _blood = widget.initialData!['blood'] == 1;
+      _selectedDateTime = DateTime.parse(widget.initialData!['timestamp']);
+    } else {
+      _bristolRating = 3;
+      _urgency = 3;
+      _blood = false;
+      _selectedDateTime = DateTime.now();
+    }
+  }
 
   void _saveData() async {
     String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
@@ -24,7 +45,11 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
       'blood': _blood ? 1 : 0,
     };
 
-    await DatabaseHelper().insertPoopData(data);
+    if (widget.isEditMode && widget.initialData != null) {
+      await DatabaseHelper().updatePoopData(widget.initialData!['id'], data);
+    } else {
+      await DatabaseHelper().insertPoopData(data);
+    }
 
     Navigator.of(context).pop();
   }

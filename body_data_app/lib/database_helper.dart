@@ -91,11 +91,49 @@ class DatabaseHelper {
     return id;
   }
 
+  Future<int> updatePoopData(int id, Map<String, dynamic> newData) async {
+    final db = await database;
+    return await db.update(
+      'poop_data',
+      newData,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> deletePoopData(int id) async {
+    final db = await database;
+    return await db.delete(
+      'poop_data',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<int> insertPillData(Map<String, dynamic> data) async {
     final db = await database;
     int id = await db.insert('pill_data', data);
     _logger.info('Inserted pill data with id: $id');
     return id;
+  }
+
+  Future<int> updatePillData(int id, Map<String, dynamic> newData) async {
+    final db = await database;
+    return await db.update(
+      'pill_data',
+      newData,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> deletePillData(int id) async {
+    final db = await database;
+    return await db.delete(
+      'pill_data',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<Map<String, String?>> getPillDetails(String pillName) async {

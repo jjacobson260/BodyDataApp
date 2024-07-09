@@ -4,24 +4,35 @@ import 'database_helper.dart';
 import 'date_time_picker_dialog.dart'; 
 
 class PillEntryDialog extends StatefulWidget {
+  final bool isEditMode;
+  final Map<String, dynamic>? initialData;
+
+  PillEntryDialog({this.isEditMode=false, this.initialData});
+
   @override
   _PillEntryDialogState createState() => _PillEntryDialogState();
 }
 
 class _PillEntryDialogState extends State<PillEntryDialog> {
   final _formKey = GlobalKey<FormState>();
-  String _selectedPillName = '';
+  late String _selectedPillName;
   String _newPillName = '';
-  String _dosage = '';
-  String _selectedUnit = '';
+  late String _dosage = '';
+  late String _selectedUnit = '';
   String _newUnit = '';
   List<String> _pillNames = [];
   List<String> _pillUnits = ['mg', 'count'];
-  DateTime _selectedDateTime = DateTime.now(); // Track selected datetime
+  late DateTime _selectedDateTime;
 
   @override
   void initState() {
     super.initState();
+    if (widget.isEditMode && widget.initialData != null) {
+      _selectedPillName = widget.initialData!['pill_name'];
+      _dosage = widget.initialData!['dosage'];
+      _selectedUnit = widget.initialData!['unit'];
+      _selectedDateTime = DateTime.parse(widget.initialData!['timestamp']);
+    } 
     _fetchPillNames();
     _fetchPillUnits();
   }
@@ -57,16 +68,20 @@ class _PillEntryDialogState extends State<PillEntryDialog> {
       String unit = _selectedUnit == 'New Unit' ? _newUnit : _selectedUnit;
       String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
 
-      Map<String, dynamic> pillData = {
+      Map<String, dynamic> data = {
         'timestamp': timestamp,
         'pill_name': pillName,
         'dosage': _dosage,
         'unit': unit,
       };
 
-      await DatabaseHelper().insertPillData(pillData);
+      if (widget.isEditMode && widget.initialData != null) {
+        await DatabaseHelper().updatePillData(widget.initialData!['id'], data);
+      } else {
+        await DatabaseHelper().insertPillData(data);
+      }
 
-      Navigator.of(context).pop(); // Close the dialog
+      Navigator.of(context).pop();
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Pill data saved'),
