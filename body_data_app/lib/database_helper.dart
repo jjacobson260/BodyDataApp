@@ -87,8 +87,18 @@ class DatabaseHelper {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             sleep_time TEXT,
+            wake_time TEXT,
             dream_log TEXT,
             STILL_ASLEEP INTEGER
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS mind_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            length INTEGER,
+            depth INTEGER,
+            thought_log TEXT
           )
         ''');
       },
@@ -119,6 +129,66 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<List<Map<String, dynamic>>> getPoopData() async {
+    final db = await database;
+    _logger.info('Querying all poop data');
+    return await db.query('poop_data');
+  }
+
+  Future<double> getAverageBristolRatingForDays(int days) async {
+    final db = await database;
+    final now = DateTime.now();
+    final pastDate = now.subtract(Duration(days: days));
+    final pastDateStr = pastDate.toIso8601String();
+
+    final result = await db.rawQuery(
+      'SELECT AVG(bristol_rating) as avg_rating FROM poop_data WHERE timestamp >= ?',
+      [pastDateStr],
+    );
+
+    if (result.isNotEmpty && result.first['avg_rating'] != null) {
+      return result.first['avg_rating'] as double;
+    } else {
+      return 0.0;
+    }
+  }
+
+  Future<double> getAverageUrgencyForDays(int days) async {
+    final db = await database;
+    final now = DateTime.now();
+    final pastDate = now.subtract(Duration(days: days));
+    final pastDateStr = pastDate.toIso8601String();
+
+    final result = await db.rawQuery(
+      'SELECT AVG(urgency) as avg_urgency FROM poop_data WHERE timestamp >= ?',
+      [pastDateStr],
+    );
+
+    if (result.isNotEmpty && result.first['avg_urgency'] != null) {
+      return result.first['avg_urgency'] as double;
+    } else {
+      return 0.0;
+    }
+  }
+
+  Future<int> getBMCountForDays(int days) async {
+    final db = await database;
+    final now = DateTime.now();
+    final pastDate = now.subtract(Duration(days: days));
+    final pastDateStr = pastDate.toIso8601String();
+
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM poop_data WHERE timestamp >= ?',
+      [pastDateStr],
+    );
+
+    if (result.isNotEmpty && result.first['count'] != null) {
+      return result.first['count'] as int;
+    } else {
+      return 0;
+    }
   }
 
   Future<int> insertPillData(Map<String, dynamic> data) async {
@@ -156,7 +226,7 @@ class DatabaseHelper {
       columns: ['dosage', 'unit'],
       where: 'pill_name = ?',
       whereArgs: [pillName],
-      orderBy: 'timestamp DESC',
+      orderBy: 'timestamp ASC',
       limit: 1,
     );
 
@@ -185,11 +255,7 @@ class DatabaseHelper {
     return pillUnits;
   }
 
-  Future<List<Map<String, dynamic>>> getPoopData() async {
-    final db = await database;
-    _logger.info('Querying all poop data');
-    return await db.query('poop_data');
-  }
+  
 
   Future<List<Map<String, dynamic>>> getPillData() async {
     final db = await database;
@@ -218,7 +284,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getFoodData() async {
     final db = await database;
     _logger.info('Querying all food data');
-    return await db.query('food_data', orderBy: 'timestamp DESC');
+    return await db.query('food_data', orderBy: 'timestamp ASC');
   }
 
   Future<void> insertMoodData(Map<String, dynamic> moodData) async {
@@ -241,7 +307,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getMoodData() async {
     final db = await database;
     _logger.info('Querying all mood data');
-    return await db.query('mood_data', orderBy: 'timestamp DESC');
+    return await db.query('mood_data', orderBy: 'timestamp ASC');
   }
 
   Future<void> insertJournalData(Map<String, dynamic> journalData) async {
@@ -253,7 +319,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getJournalData() async {
     final db = await database;
     _logger.info('Querying all journal data');
-    return await db.query('journal_data', orderBy: 'timestamp DESC');
+    return await db.query('journal_data', orderBy: 'timestamp ASC');
   }
 
   Future<void> insertSleepData({required String timestamp, required String sleepTime, String? wakeTime, String? dreamLog, bool wakingUp = false,}) async {
@@ -263,6 +329,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT,
         sleep_time TEXT,
+        wake_time TEXT,
         dream_log TEXT,
         STILL_ASLEEP INTEGER
       )
@@ -293,5 +360,52 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<int> deleteSleepData(int id) async {
+    final db = await database;
+    return await db.delete(
+      'sleep_log',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> getMaxSleepLogId() async {
+    final db = await database;
+    final List<Map<String, dynamic>> result = await db.rawQuery('SELECT MAX(id) as max_id FROM sleep_log');
+    return result.first['max_id'] as int;
+
+  }
+
+  Future<void> insertMindData(Map<String, dynamic> mindData) async {
+    final db = await database;
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS sleep_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT,
+        length INTEGER,
+        depth INTEGER,
+        thought_log TEXT,
+      )
+    ''');
+    await db.insert('mind_data', mindData, conflictAlgorithm: ConflictAlgorithm.replace);
+    _logger.info('Inserted mood data');
+  }
+
+  Future<int> updateMindLog(int id, Map<String, dynamic> newData) async {
+    final db = await database;
+    return await db.update(
+      'mind_data',
+      newData,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getMindData() async {
+    final db = await database;
+    _logger.info('Querying all mind data');
+    return await db.query('mind_data', orderBy: 'timestamp ASC');
   }
 }

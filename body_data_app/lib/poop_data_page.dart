@@ -5,7 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'poop_entry_dialog.dart';
 import 'database_helper.dart';
-import 'export_helper.dart'; // Ensure this helper handles export logic
+import 'export_helper.dart';
+import 'poop_stats_widget.dart';
 
 class PoopDataPage extends StatefulWidget {
   @override
@@ -103,9 +104,16 @@ class _PoopDataPageState extends State<PoopDataPage> {
           ),
         ],
       ),
-      body: _records.isEmpty
-          ? Center(child: Text('No records found'))
-          : ListView.builder(
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+
+          Center(child: PoopStatsWidget()),
+          SingleChildScrollView(
+            child:_records.isEmpty
+            ? Center(child: Text('No records found'))
+            : ListView.builder(
               itemCount: _records.length,
               itemBuilder: (context, index) {
                 final record = _records[index];
@@ -133,6 +141,10 @@ class _PoopDataPageState extends State<PoopDataPage> {
                 );
               },
             ),
+          )
+          
+        ]
+      ) 
     );
   }
 }
