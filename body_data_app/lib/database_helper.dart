@@ -114,6 +114,7 @@ class DatabaseHelper {
 
   Future<int> updatePoopData(int id, Map<String, dynamic> newData) async {
     final db = await database;
+    _logger.info('Updating poop data with id: $id with newData: $newData');
     return await db.update(
       'poop_data',
       newData,
@@ -124,6 +125,7 @@ class DatabaseHelper {
 
   Future<int> deletePoopData(int id) async {
     final db = await database;
+    _logger.info('Deleting poop data with id: $id');
     return await db.delete(
       'poop_data',
       where: 'id = ?',
@@ -147,7 +149,7 @@ class DatabaseHelper {
       'SELECT AVG(bristol_rating) as avg_rating FROM poop_data WHERE timestamp >= ?',
       [pastDateStr],
     );
-
+    _logger.info('Got average bristol rating of: $result');
     if (result.isNotEmpty && result.first['avg_rating'] != null) {
       return result.first['avg_rating'] as double;
     } else {
@@ -165,7 +167,7 @@ class DatabaseHelper {
       'SELECT AVG(urgency) as avg_urgency FROM poop_data WHERE timestamp >= ?',
       [pastDateStr],
     );
-
+    _logger.info('Got average urgency of: $result');
     if (result.isNotEmpty && result.first['avg_urgency'] != null) {
       return result.first['avg_urgency'] as double;
     } else {
@@ -183,7 +185,7 @@ class DatabaseHelper {
       'SELECT COUNT(*) as count FROM poop_data WHERE timestamp >= ?',
       [pastDateStr],
     );
-
+    _logger.info('Got BM count of: $result');
     if (result.isNotEmpty && result.first['count'] != null) {
       return result.first['count'] as int;
     } else {
@@ -200,6 +202,7 @@ class DatabaseHelper {
 
   Future<int> updatePillData(int id, Map<String, dynamic> newData) async {
     final db = await database;
+    _logger.info('Updating pill data with id: $id with newData: $newData');
     return await db.update(
       'pill_data',
       newData,
@@ -210,6 +213,7 @@ class DatabaseHelper {
 
   Future<int> deletePillData(int id) async {
     final db = await database;
+    _logger.info('Deleting pill data with id: $id');
     return await db.delete(
       'pill_data',
       where: 'id = ?',
@@ -322,7 +326,7 @@ class DatabaseHelper {
     return await db.query('journal_data', orderBy: 'timestamp ASC');
   }
 
-  Future<void> insertSleepData({required String timestamp, required String sleepTime, String? wakeTime, String? dreamLog, bool wakingUp = false,}) async {
+  Future<void> insertSleepData(Map<String, dynamic> sleepData) async {
     final db = await database;
     await db.execute('''
       CREATE TABLE IF NOT EXISTS sleep_log (
@@ -334,47 +338,53 @@ class DatabaseHelper {
         STILL_ASLEEP INTEGER
       )
     ''');
-    await db.insert(
-      'sleep_log',
-      {
-        'timestamp': timestamp,
-        'sleep_time': sleepTime,
-        'wake_time': wakeTime,
-        'dream_log': dreamLog,
-        'STILL_ASLEEP': wakingUp ? 0 : 1,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('sleep_log', sleepData, conflictAlgorithm: ConflictAlgorithm.replace);
+    _logger.info('Inserted sleep data');
   }
 
-  Future<void> updateSleepLog(int id, DateTime adjustedSleepTime, DateTime wakeTime, String dreamLog) async {
+  Future<void> updateSleepData(int id, Map<String, dynamic> newData) async {
     final db = await database;
     await db.update(
       'sleep_log',
-      {
-        'wake_time': DateFormat('yyyy-MM-dd HH:mm:ss').format(wakeTime),
-        'sleep_time': DateFormat('yyyy-MM-dd HH:mm:ss').format(adjustedSleepTime),
-        'dream_log': dreamLog,
-        'STILL_ASLEEP': 0,
-      },
+      newData,
       where: 'id = ?',
       whereArgs: [id],
     );
+    _logger.info('Updated sleep data with id: $id with newData: $newData');
   }
 
   Future<int> deleteSleepData(int id) async {
     final db = await database;
+    _logger.info('Deleted sleep data with id: $id');
     return await db.delete(
       'sleep_log',
       where: 'id = ?',
       whereArgs: [id],
     );
+    
+  }
+
+  Future<Map<String, dynamic>?> getStillAsleepEntry() async {
+    final db = await database;
+    final result = await db.query(
+      'sleep_log',
+      where: 'STILL_ASLEEP = ?',
+      whereArgs: [1],
+      orderBy: 'id DESC',
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
   }
 
   Future<int> getMaxSleepLogId() async {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.rawQuery('SELECT MAX(id) as max_id FROM sleep_log');
-    return result.first['max_id'] as int;
+    final max_id = result.first['max_id'] as int;
+    _logger.info('Got max id: $max_id');
+    return max_id;
 
   }
 
@@ -395,6 +405,7 @@ class DatabaseHelper {
 
   Future<int> updateMindLog(int id, Map<String, dynamic> newData) async {
     final db = await database;
+    _logger.info('Updated mind data with id: $id with newData: $newData');
     return await db.update(
       'mind_data',
       newData,

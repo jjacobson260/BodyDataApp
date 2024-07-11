@@ -39,18 +39,28 @@ class _HomePageState extends State<HomePage> {
     _checkAndShowSleepDialog();
   }
 
-  void _toggleSleepButton() {
+  Future<void> _toggleSleepButton() async {
+    final dbHelper = DatabaseHelper();
     setState(() {
       if (isSleepButtonActive) {
         isSleepButtonActive = false;
         _cancelSleep(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sleep Canceled')),
-        );
       } else {
+        _insertSleepData(context);
         isSleepButtonActive = true;
       }
     });
+  }
+
+  void _cancelSleep(BuildContext context) async {
+    final dbHelper = DatabaseHelper();
+    final int? id = await dbHelper.getMaxSleepLogId();
+    if (id != null) {
+      await dbHelper.deleteSleepData(id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sleep Canceled')),
+      );
+    }
   }
 
   void _checkAndShowSleepDialog() async {
@@ -90,22 +100,22 @@ class _HomePageState extends State<HomePage> {
   }
   
   void _insertSleepData(BuildContext context) async {
-    _toggleSleepButton();
+    
     String currentTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-
-    await DatabaseHelper().insertSleepData(timestamp: currentTime, sleepTime: currentTime, wakeTime: null, dreamLog: null, wakingUp: false);
+    final sleepData = {
+      'timestamp': currentTime,
+      'sleep_time': currentTime,
+      'wake_time': null,
+      'dream_log': null,
+      'STILL_ASLEEP': 1
+    };
+    await DatabaseHelper().insertSleepData(sleepData);
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Sleep data saved'),
     ));
   }
 
-  
-
-  void _cancelSleep(BuildContext context) async {
-    final id = await DatabaseHelper().getMaxSleepLogId();
-    await DatabaseHelper().deleteSleepData(id);
-  }
 
   void _insertMindData(BuildContext context) async {
     String currentTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
@@ -275,7 +285,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: () => _insertSleepData(context),
+                        onPressed: () => _toggleSleepButton(),
                         child: Text('😴'),
                         style: ElevatedButton.styleFrom(backgroundColor: isSleepButtonActive ? sleepButtonColor : sleepButtonColor.withOpacity(0.5)),
                       ),

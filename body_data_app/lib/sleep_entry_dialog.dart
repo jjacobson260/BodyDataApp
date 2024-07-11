@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
+
 
 class SleepEntryDialog extends StatefulWidget {
   @override
@@ -12,6 +14,9 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
   int _minutesToFallAsleep = 5;
   TextEditingController _dreamLogController = TextEditingController();
 
+  final Logger _logger = Logger('SleepEntryDialog');
+
+
   @override
   void initState() {
     super.initState();
@@ -20,34 +25,38 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
 
   void _checkStillAsleepEntry() async {
     final dbHelper = DatabaseHelper();
-    final stillAsleepEntry = await dbHelper.getStillAsleepEntry();
+    final latestEntry = await dbHelper.getStillAsleepEntry();
 
-    if (stillAsleepEntry != null) {
+    if (latestEntry != null) {
       // Still asleep entry found, prompt user to update
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Center(child: Text('Waking Up')),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Minutes to Sleep?'),
-                NumberPicker(
-                  value: _minutesToFallAsleep,
-                  minValue: 5,
-                  maxValue: 255,
-                  step: 5,
-                  onChanged: (value) => setState(() => _minutesToFallAsleep = value),
-                  axis: Axis.horizontal,
-                ),
-                TextField(
-                  controller: _dreamLogController,
-                  decoration: InputDecoration(
-                    labelText: 'Dream Log',
-                  ),
-                ),
-              ],
+            content: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Minutes to Sleep?'),
+                    NumberPicker(
+                      value: _minutesToFallAsleep,
+                      minValue: 5,
+                      maxValue: 255,
+                      step: 5,
+                      onChanged: (value) => setState(() => _minutesToFallAsleep = value),
+                      axis: Axis.horizontal,
+                    ),
+                    TextField(
+                      controller: _dreamLogController,
+                      decoration: InputDecoration(
+                        labelText: 'Dream Log',
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             actions: [
               Padding(
@@ -57,7 +66,7 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
                   children: [
                     TextButton(
                       onPressed: () async {
-                        await dbHelper.deleteEntry(stillAsleepEntry['id']);
+                        await dbHelper.deleteSleepData(latestEntry['id']);
                         Navigator.of(context).pop();
                       },
                       child: Text('No Sleep'),
@@ -66,14 +75,22 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
                       onPressed: () async {
                         final now = DateTime.now();
                         final wakeTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+                        // Parse existing sleep time
+                        final sleepTime = DateFormat('yyyy-MM-dd HH:mm:ss').parse(latestEntry['sleep_time']);
+                        // Add minutes to sleep time
+                        final updatedSleepTime = sleepTime.add(Duration(minutes: _minutesToFallAsleep));
+                        // Format updated sleep time to string
+                        final updatedSleepTimeStr = DateFormat('yyyy-MM-dd HH:mm:ss').format(updatedSleepTime);
 
-                        await dbHelper.updateSleepData(
-                          stillAsleepEntry['id'],
-                          sleepTime: stillAsleepEntry['sleep_time'] + Duration(minutes: _minutesToFallAsleep).inMinutes.toString(),
-                          wakeTime: wakeTime,
-                          dreamLog: _dreamLogController.text,
-                          stillAsleep: false,
-                        );
+                        final latestId = latestEntry['id'];
+                        final sleepData = {
+                          'sleep_time': updatedSleepTimeStr,
+                          'wake_time': wakeTime,
+                          'dream_log': _dreamLogController.text,
+                          'STILL_ASLEEP': 0,
+                        };
+                        _logger.info('Updating: $latestId with data: $sleepData');
+                        await dbHelper.updateSleepData(latestId, sleepData);
 
                         Navigator.of(context).pop();
                       },
@@ -94,53 +111,4 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
   Widget build(BuildContext context) {
     return Container();
   }
-}
-
-extension on DatabaseHelper {
-  Future<Map<String, dynamic>?> getStillAsleepEntry() async {
-    final db = await database;
-    final result = await db.query(
-      'sleep_log',
-      where: 'STILL_ASLEEP = ?',
-      whereArgs: [1],
-      orderBy: 'id DESC',
-      limit: 1,
-    );
-    if (result.isNotEmpty) {
-      return result.first;
-    }
-    return null;
-  }
-
-  Future<void> updateSleepData(
-    int id, {
-    required String sleepTime,
-    required String wakeTime,
-    String? dreamLog,
-    required bool stillAsleep,
-  }) async {
-    final db = await database;
-    await db.update(
-      'sleep_log',
-      {
-        'sleep_time': sleepTime,
-        'wake_time': wakeTime,
-        'dream_log': dreamLog,
-        'STILL_ASLEEP': stillAsleep ? 1 : 0,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<void> deleteEntry(int id) async {
-    final db = await database;
-    await db.delete(
-      'sleep_log',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  
 }

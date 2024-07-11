@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
 import 'home_page.dart';
 import 'poop_data_page.dart';
 import 'pill_data_page.dart';
@@ -32,7 +33,7 @@ void main() async {
     // Initialize sqflite for mobile
     databaseFactory = databaseFactory; // This is just to emphasize we're using the default factory for mobile
   }
-
+  _setupLogging();
   // Run your Flutter app
   runApp(MyApp());
 }
@@ -59,6 +60,14 @@ Future<void> requestPermissions() async {
   if (statuses[Permission.photos]?.isDenied ?? false) {
     // Handle gallery/photos permission denied
   }
+}
+
+void _setupLogging() {
+  Logger.root.level = Level.ALL; // Set the root logger level to ALL
+  Logger.root.onRecord.listen((record) {
+    // Print log messages to the console
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
 }
 
 class MyApp extends StatelessWidget {
