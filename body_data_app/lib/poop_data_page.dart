@@ -110,7 +110,7 @@ class _PoopDataPageState extends State<PoopDataPage> {
         children: [
 
           Center(child: PoopStatsWidget()),
-          SingleChildScrollView(
+          Expanded(
             child:_records.isEmpty
             ? Center(child: Text('No records found'))
             : ListView.builder(
