@@ -36,21 +36,27 @@ class _JournalEntryDialogState extends State<JournalEntryDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Enter Journal Entry'),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          decoration: InputDecoration(labelText: 'Journal Entry'),
-          maxLines: 100,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter a journal entry';
-            }
-            return null;
-          },
-          onSaved: (value) {
-            _entry = value!;
-          },
-        ),
+      content: SingleChildScrollView(
+        child: Column(
+          children: [
+            Form(
+              key: _formKey,
+              child: TextFormField(
+                decoration: InputDecoration(labelText: 'Journal Entry'),
+                maxLines: 100,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a journal entry';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _entry = value!;
+                },
+              ),
+            )
+          ]
+        )
       ),
       actions: <Widget>[
         Align(

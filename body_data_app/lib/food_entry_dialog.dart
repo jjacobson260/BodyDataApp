@@ -3,7 +3,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
-import 'date_time_picker_dialog.dart'; // Import your DateTimePickerDialog
+import 'date_time_picker_dialog.dart'; 
+import 'image_selector_widget.dart';
 
 class FoodEntryDialog extends StatefulWidget {
   @override
@@ -26,12 +27,11 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
       'timestamp': timestamp,
       'description': _descriptionController.text,
       'image_path': _image?.path,
-      // Handle image file saving as per your implementation
     };
 
     await DatabaseHelper().insertFoodData(foodData);
 
-    Navigator.of(context).pop(); // Close the dialog
+    Navigator.of(context).pop();
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Food data saved'),
@@ -95,21 +95,14 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
                   ))
                 : SizedBox.shrink(),
               SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    child: Text('📷'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    child: Text('🖼️'),
-                  ),
-                ],
+              ImageSelector(
+                onImageSelected: (image) {
+                  setState(() {
+                    _image = image;
+                  });
+                },
               ),
               SizedBox(height: 16),
-              // Add image selection widget or logic here
               Center(
                 child: ElevatedButton(
                   onPressed: _saveFoodData,

@@ -19,7 +19,7 @@ class _SleepDataPageState extends State<SleepDataPage> {
 
   Future<void> _fetchSleepLogs() async {
     final db = await DatabaseHelper().database;
-    final List<Map<String, dynamic>> logs = await db.query('sleep_log');
+    final List<Map<String, dynamic>> logs = await db.query('sleep_data');
     setState(() {
       _sleepLogs = logs;
     });
@@ -40,7 +40,7 @@ class _SleepDataPageState extends State<SleepDataPage> {
 
   void _deleteSleepLog(int id) async {
     final db = await DatabaseHelper().database;
-    await db.delete('sleep_log', where: 'id = ?', whereArgs: [id]);
+    await db.delete('sleep_data', where: 'id = ?', whereArgs: [id]);
     _fetchSleepLogs();
   }
 

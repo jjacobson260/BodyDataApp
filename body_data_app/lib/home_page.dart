@@ -13,7 +13,8 @@ import 'journal_entry_dialog.dart';
 import 'journal_data_page.dart';
 import 'sleep_entry_dialog.dart';
 import 'sleep_data_page.dart';
-import 'mind_data_page.dart';
+import 'thought_entry_dialog.dart';
+import 'thought_data_page.dart';
 import 'database_helper.dart';
 
 
@@ -28,15 +29,17 @@ class _HomePageState extends State<HomePage> {
   Color foodButtonColor = Colors.yellow;
   Color moodButtonColor = Colors.green;
   Color journalButtonColor = Colors.blue;
-  Color mindButtonColor = Color(0xFF8A2BE2);
+  Color thoughtButtonColor = Color(0xFF8A2BE2);
   Color sleepButtonColor = Colors.indigo;
   
   bool isSleepButtonActive = false;
+  bool isThoughtButtonActive = false;
 
   @override
   void initState() {
     super.initState();
     _checkAndShowSleepDialog();
+    _checkAndShowThoughtDialog();
   }
 
   Future<void> _toggleSleepButton() async {
@@ -66,7 +69,7 @@ class _HomePageState extends State<HomePage> {
   void _checkAndShowSleepDialog() async {
     final db = await DatabaseHelper().database;
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS sleep_log (
+      CREATE TABLE IF NOT EXISTS sleep_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT,
         sleep_time TEXT,
@@ -76,7 +79,7 @@ class _HomePageState extends State<HomePage> {
       )
     ''');
     final List<Map<String, dynamic>> sleepLogs = await db.query(
-      'sleep_log',
+      'sleep_data',
       where: 'STILL_ASLEEP = ?',
       whereArgs: [1],
       orderBy: 'timestamp DESC',
@@ -112,25 +115,83 @@ class _HomePageState extends State<HomePage> {
     await DatabaseHelper().insertSleepData(sleepData);
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Sleep data saved'),
+      content: Text('Sleep Time Started'),
     ));
   }
 
+  
+  Future<void> _toggleThoughtButton() async {
+    final dbHelper = DatabaseHelper();
+    setState(() {
+      if (isThoughtButtonActive) {
+        isThoughtButtonActive = false;
+        _cancelThought(context);
+      } else {
+        _insertThoughtData(context);
+        isThoughtButtonActive = true;
+      }
+    });
+  }
 
-  void _insertMindData(BuildContext context) async {
+  void _cancelThought(BuildContext context) async {
+    final dbHelper = DatabaseHelper();
+    final int? id = await dbHelper.getMaxThoughtLogId();
+    if (id != null) {
+      await dbHelper.deleteThoughtData(id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Thought Canceled')),
+      );
+    }
+  }
+
+  void _checkAndShowThoughtDialog() async {
+    final db = await DatabaseHelper().database;
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS thought_data (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT,
+        length INTEGER,
+        depth INTEGER,
+        thought_log TEXT,
+        STILL_THINKING INT
+      )
+    ''');
+    final List<Map<String, dynamic>> thoughtLogs = await db.query(
+      'thought_data',
+      where: 'STILL_THINKING = ?',
+      whereArgs: [1],
+      orderBy: 'timestamp DESC',
+      limit: 1,
+    );
+
+    if (thoughtLogs.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return SleepEntryDialog();
+          },
+        );
+      });
+    }
+  }
+
+
+  void _insertThoughtData(BuildContext context) async {
     String currentTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
-    Map<String, dynamic> mindData = {
+    Map<String, dynamic> thoughtData = {
         'timestamp': currentTime,
         'length': null,
         'depth': null,
         'thought_log': null,
+        'STILL_THINKING': true
       };
     
-    //await DatabaseHelper().insertMindData(mindData: mindData);
+    //await DatabaseHelper().insertThoughtData(thoughtData: thoughtData);
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Sleep data saved'),
+      content: Text('Thought Time Started'),
     ));
   }
 
@@ -182,10 +243,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _navigateToMindDataPage(BuildContext context) {
+  void _navigateToThoughtDataPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => MindDataPage(),
+        builder: (context) => ThoughtDataPage(),
       ),
     );
   }
@@ -216,8 +277,8 @@ class _HomePageState extends State<HomePage> {
                 case 'Sleep Data':
                   _navigateToSleepDataPage(context);
                   break;
-                case 'Mind Data':
-                  _navigateToMindDataPage(context);
+                case 'Thought Data':
+                  _navigateToThoughtDataPage(context);
                   break;
               }
             },
@@ -228,8 +289,8 @@ class _HomePageState extends State<HomePage> {
                   child: Text('Sleep Data'),
                 ),
                 PopupMenuItem(
-                  value: 'Mind Data',
-                  child: Text('Mind Data'),
+                  value: 'Thought Data',
+                  child: Text('Thought Data'),
                 ),
                 PopupMenuItem(
                   value: 'Journal Data',
@@ -291,9 +352,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                       SizedBox(height: 7),
                       ElevatedButton(
-                        onPressed: () => _insertMindData(context),
+                        onPressed: () => _toggleThoughtButton(),
                         child: Text('🧠'),
-                        style: ElevatedButton.styleFrom(backgroundColor: mindButtonColor.withOpacity(0.5)),
+                        style: ElevatedButton.styleFrom(backgroundColor: isThoughtButtonActive ? thoughtButtonColor : thoughtButtonColor.withOpacity(0.5)),
                       ),
                       SizedBox(height: 7),
                       ElevatedButton(

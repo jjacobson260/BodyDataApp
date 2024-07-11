@@ -83,7 +83,7 @@ class DatabaseHelper {
           )
         ''');
         await db.execute('''
-          CREATE TABLE IF NOT EXISTS sleep_log (
+          CREATE TABLE IF NOT EXISTS sleep_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             sleep_time TEXT,
@@ -93,12 +93,13 @@ class DatabaseHelper {
           )
         ''');
         await db.execute('''
-          CREATE TABLE IF NOT EXISTS mind_log (
+          CREATE TABLE IF NOT EXISTS thought_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             length INTEGER,
             depth INTEGER,
-            thought_log TEXT
+            thought_log TEXT,
+            STILL_THINKING INT
           )
         ''');
       },
@@ -329,7 +330,7 @@ class DatabaseHelper {
   Future<void> insertSleepData(Map<String, dynamic> sleepData) async {
     final db = await database;
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS sleep_log (
+      CREATE TABLE IF NOT EXISTS sleep_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT,
         sleep_time TEXT,
@@ -338,14 +339,14 @@ class DatabaseHelper {
         STILL_ASLEEP INTEGER
       )
     ''');
-    await db.insert('sleep_log', sleepData, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('sleep_data', sleepData, conflictAlgorithm: ConflictAlgorithm.replace);
     _logger.info('Inserted sleep data');
   }
 
   Future<void> updateSleepData(int id, Map<String, dynamic> newData) async {
     final db = await database;
     await db.update(
-      'sleep_log',
+      'sleep_data',
       newData,
       where: 'id = ?',
       whereArgs: [id],
@@ -357,7 +358,7 @@ class DatabaseHelper {
     final db = await database;
     _logger.info('Deleted sleep data with id: $id');
     return await db.delete(
-      'sleep_log',
+      'sleep_data',
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -367,7 +368,7 @@ class DatabaseHelper {
   Future<Map<String, dynamic>?> getStillAsleepEntry() async {
     final db = await database;
     final result = await db.query(
-      'sleep_log',
+      'sleep_data',
       where: 'STILL_ASLEEP = ?',
       whereArgs: [1],
       orderBy: 'id DESC',
@@ -381,42 +382,77 @@ class DatabaseHelper {
 
   Future<int> getMaxSleepLogId() async {
     final db = await database;
-    final List<Map<String, dynamic>> result = await db.rawQuery('SELECT MAX(id) as max_id FROM sleep_log');
+    final List<Map<String, dynamic>> result = await db.rawQuery('SELECT MAX(id) as max_id FROM sleep_data');
     final max_id = result.first['max_id'] as int;
     _logger.info('Got max id: $max_id');
     return max_id;
 
   }
 
-  Future<void> insertMindData(Map<String, dynamic> mindData) async {
+  Future<void> insertThoughtData(Map<String, dynamic> thoughtData) async {
     final db = await database;
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS sleep_log (
+      CREATE TABLE IF NOT EXISTS sleep_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT,
         length INTEGER,
         depth INTEGER,
         thought_log TEXT,
+        STILL_THINKING INT
       )
     ''');
-    await db.insert('mind_data', mindData, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('thought_data', thoughtData, conflictAlgorithm: ConflictAlgorithm.replace);
     _logger.info('Inserted mood data');
   }
 
-  Future<int> updateMindLog(int id, Map<String, dynamic> newData) async {
+  Future<int> updateThoughtData(int id, Map<String, dynamic> newData) async {
     final db = await database;
-    _logger.info('Updated mind data with id: $id with newData: $newData');
+    _logger.info('Updated thought data with id: $id with newData: $newData');
     return await db.update(
-      'mind_data',
+      'thought_data',
       newData,
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  Future<List<Map<String, dynamic>>> getMindData() async {
+  Future<List<Map<String, dynamic>>> getThoughtData() async {
     final db = await database;
-    _logger.info('Querying all mind data');
-    return await db.query('mind_data', orderBy: 'timestamp ASC');
+    _logger.info('Querying all thought data');
+    return await db.query('thought_data', orderBy: 'timestamp ASC');
+  }
+
+  Future<int> deleteThoughtData(int id) async {
+    final db = await database;
+    _logger.info('Deleted thought data with id: $id');
+    return await db.delete(
+      'thought_data',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> getMaxThoughtLogId() async {
+    final db = await database;
+    final List<Map<String, dynamic>> result = await db.rawQuery('SELECT MAX(id) as max_id FROM thought_data');
+    final max_id = result.first['max_id'] as int;
+    _logger.info('Got max id: $max_id');
+    return max_id;
+
+  }
+
+  Future<Map<String, dynamic>?> getStillThinkingEntry() async {
+    final db = await database;
+    final result = await db.query(
+      'thought_data',
+      where: 'STILL_THINKING = ?',
+      whereArgs: [1],
+      orderBy: 'id DESC',
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
   }
 }
