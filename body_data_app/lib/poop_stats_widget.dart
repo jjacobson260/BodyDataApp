@@ -24,6 +24,26 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
     _fetchAverages();
   }
 
+  Color getCountColorValue(int value, int threshold) {
+    Color color;
+    if (value < threshold) {
+      color = Colors.green;
+    } else {
+      color = Colors.red;
+    };
+    return color;
+  }
+
+  Color getPercentColorValue(percentDifference, value, threshold) {
+    Color color;
+    if ((percentDifference < 0 && value > threshold) || (percentDifference > 0 && value < threshold)) {
+      color = Colors.green;
+    } else {
+      color = Colors.red;
+    };
+    return color;
+  }
+
   double calculatePercentDifference(double average1, double average2) {
     if (average2 == 0) {
       return 0.0; // Avoid division by zero
@@ -68,20 +88,23 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildStatColumn(
+                      _buildPercentColumn(
                         'Bristol Rating',
                         bristolAverage24h,
                         bristolPercentDifference,
+                        4
                       ),
-                      _buildStatColumn(
+                      _buildPercentColumn(
                         'Avg Urgency',
                         urgencyAverage24h,
                         urgencyPercentDifference,
+                        4
                       ),
-                      _buildStatColumn(
+                      _buildCountColumn(
                         'BM Count',
-                        bmCount24h / 1.0,
+                        bmCount24h,
                         bmCountPercentDifference,
+                        4
                       ),
                     ],
                   ),
@@ -91,7 +114,7 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
     );
   }
 
-  Widget _buildStatColumn(String title, double average, double percentDifference) {
+  Widget _buildPercentColumn(String title, double average, double percentDifference, int threshold) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -103,10 +126,30 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
         Text(
           '${percentDifference.toStringAsFixed(2)}%',
           style: TextStyle(
-            color: percentDifference < 0 ? Colors.green : Colors.red,
+            color: getPercentColorValue(percentDifference, average, threshold),
           ),
         ),
-        Text('vs past week'),
+        Text('vs week'),
+      ],
+    );
+  }
+
+  Widget _buildCountColumn(String title, int count, double percentDifference, int threshold) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(title),
+        Text(
+          count.toString(),
+          style: TextStyle(fontSize: 24),
+        ),
+        Text(
+          '${percentDifference.toStringAsFixed(2)}%',
+          style: TextStyle(
+            color: getCountColorValue(count, threshold),
+          ),
+        ),
+        Text('vs week'),
       ],
     );
   }

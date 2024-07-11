@@ -29,8 +29,8 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
       _blood = widget.initialData!['blood'] == 1;
       _selectedDateTime = DateTime.parse(widget.initialData!['timestamp']);
     } else {
-      _bristolRating = 3;
-      _urgency = 3;
+      _bristolRating = 4;
+      _urgency = 4;
       _blood = false;
       _selectedDateTime = DateTime.now();
     }
@@ -76,21 +76,7 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text('Bristol Rating: $_bristolRating'),
-            Slider(
-              value: _bristolRating.toDouble(),
-              min: 1,
-              max: 7,
-              divisions: 6,
-              label: '$_bristolRating',
-              onChanged: (value) {
-                setState(() {
-                  _bristolRating = value.toInt();
-                });
-              },
-            ),
-            SizedBox(height: 16),
+          children: <Widget>[           
             Text('Urgency: $_urgency'),
             Slider(
               value: _urgency.toDouble(),
@@ -101,6 +87,20 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
               onChanged: (value) {
                 setState(() {
                   _urgency = value.toInt();
+                });
+              },
+            ),
+            SizedBox(height: 16),
+            Text('Bristol Rating: $_bristolRating'),
+            Slider(
+              value: _bristolRating.toDouble(),
+              min: 1,
+              max: 7,
+              divisions: 6,
+              label: '$_bristolRating',
+              onChanged: (value) {
+                setState(() {
+                  _bristolRating = value.toInt();
                 });
               },
             ),
