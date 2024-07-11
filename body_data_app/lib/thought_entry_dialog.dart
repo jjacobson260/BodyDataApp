@@ -4,9 +4,6 @@ import 'database_helper.dart';
 import 'package:logging/logging.dart';
 
 class ThoughtEntryDialog extends StatefulWidget {
-  final int thoughtLogId;
-
-  ThoughtEntryDialog({required this.thoughtLogId});
 
   @override
   _ThoughtEntryDialogState createState() => _ThoughtEntryDialogState();

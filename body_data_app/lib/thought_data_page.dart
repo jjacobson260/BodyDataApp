@@ -31,7 +31,7 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
     await showDialog(
       context: context,
       builder: (context) {
-        return ThoughtEntryDialog(thoughtLogId: thoughtLogId);
+        return ThoughtEntryDialog();
       },
     );
     _fetchThoughtLogs();
