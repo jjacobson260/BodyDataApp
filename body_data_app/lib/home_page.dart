@@ -4,8 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'poop_entry_dialog.dart';
 import 'poop_data_page.dart';
-import 'pill_entry_dialog.dart';
-import 'pill_data_page.dart';
+import 'medicine_entry_dialog.dart';
+import 'medicine_data_page.dart';
 import 'food_entry_dialog.dart';
 import 'food_data_page.dart';
 import 'mood_entry_dialog.dart';
@@ -13,9 +13,11 @@ import 'mood_data_page.dart';
 import 'journal_entry_dialog.dart';
 import 'journal_data_page.dart';
 import 'sleep_entry_dialog.dart';
+import 'sleep_options_dialog.dart';
 import 'sleep_data_page.dart';
 import 'thought_entry_dialog.dart';
 import 'thought_data_page.dart';
+import 'thought_options_dialog.dart';
 import 'database_helper.dart';
 import 'package:logging/logging.dart';
 
@@ -28,7 +30,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Color poopButtonColor = Colors.red;
-  Color pillButtonColor = Colors.orange;
+  Color medicineButtonColor = Colors.orange;
   Color foodButtonColor = Colors.yellow;
   Color moodButtonColor = Colors.green;
   Color journalButtonColor = Colors.blue;
@@ -106,6 +108,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void _checkAndShowSleepDialog() async {
     _logger.info("Checking STILL_ASLEEP value");
     final db = await DatabaseHelper().database;
+    await db.execute('ALTER TABLE medicine_data RENAME TO medicine_data');
     await db.execute('''
       CREATE TABLE IF NOT EXISTS sleep_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -186,17 +189,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void _checkAndShowThoughtDialog() async {
     _logger.info("Checking STILL_THINKING value");
     final db = await DatabaseHelper().database;
-    //remove when this works
+    await db.execute('DROP TABLE thought_data');
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS thought_data (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT,
-        length INTEGER,
-        depth INTEGER,
-        thought_log TEXT,
-        STILL_THINKING INT
-      )
-    ''');
+          CREATE TABLE IF NOT EXISTS thought_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            start_time TEXT,
+            end_time TEXT,
+            length INTEGER,
+            depth INTEGER,
+            thought_log TEXT,
+            STILL_THINKING INT
+          )
+        ''');
     final List<Map<String, dynamic>> thoughtLogs = await db.query(
       'thought_data',
       where: 'STILL_THINKING = ?',
@@ -245,10 +250,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  void _navigateToPillDataPage(BuildContext context) {
+  void _navigateToMedicineDataPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PillDataPage(),
+        builder: (context) => MedicineDataPage(),
       ),
     );
   }
@@ -304,8 +309,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 case 'Poop Data':
                   _navigateToPoopDataPage(context);
                   break;
-                case 'Pill Data':
-                  _navigateToPillDataPage(context);
+                case 'Medicine Data':
+                  _navigateToMedicineDataPage(context);
                   break;
                 case 'Food Data':
                   _navigateToFoodDataPage(context);
@@ -347,8 +352,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   child: Text('Food Data'),
                 ),
                 PopupMenuItem(
-                  value: 'Pill Data',
-                  child: Text('Pill Data'),
+                  value: 'Medicine Data',
+                  child: Text('Medicine Data'),
                 ),
                 PopupMenuItem(
                   value: 'Poop Data',
@@ -388,13 +393,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: () => _toggleSleepButton(),
+                        // onPressed: () => _toggleSleepButton(),
+                        onPressed: isSleepButtonActive ? () => _toggleSleepButton() : () => _openSleepOptionsDialog(context),
                         child: Text('😴'),
                         style: ElevatedButton.styleFrom(backgroundColor: isSleepButtonActive ? sleepButtonColor : sleepButtonColor.withOpacity(0.5)),
                       ),
                       SizedBox(height: 7),
                       ElevatedButton(
-                        onPressed: () => _toggleThoughtButton(),
+                        onPressed: isThoughtButtonActive ? () => _toggleThoughtButton() : () => _openThoughtOptionsDialog(context),
                         child: Text('🧠'),
                         style: ElevatedButton.styleFrom(backgroundColor: isThoughtButtonActive ? thoughtButtonColor : thoughtButtonColor.withOpacity(0.5)),
                       ),
@@ -419,9 +425,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       ),
                       SizedBox(height: 7),
                       ElevatedButton(
-                        onPressed: () => _openPillDialog(context),
-                        child: Text('💊'),
-                        style: ElevatedButton.styleFrom(backgroundColor: pillButtonColor.withOpacity(0.5)),
+                        onPressed: () => _openMedicineDialog(context),
+                        child: Text('⚕️'),
+                        style: ElevatedButton.styleFrom(backgroundColor: medicineButtonColor.withOpacity(0.5)),
                       ),
                       SizedBox(height: 7),
                       ElevatedButton(
@@ -449,11 +455,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  void _openPillDialog(BuildContext context) {
+  void _openMedicineDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return PillEntryDialog();
+        return MedicineEntryDialog();
       },
     );
   }
@@ -481,6 +487,28 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       context: context,
       builder: (BuildContext context) {
         return JournalEntryDialog();
+      },
+    );
+  }
+
+  void _openSleepOptionsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return SleepOptionsDialog(
+          onStartSleep: () => _toggleSleepButton(),
+        );
+      },
+    );
+  }
+
+  void _openThoughtOptionsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ThoughtOptionsDialog(
+          onStartThinking: () => _toggleThoughtButton(),
+        );
       },
     );
   }

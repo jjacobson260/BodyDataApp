@@ -96,6 +96,8 @@ class DatabaseHelper {
           CREATE TABLE IF NOT EXISTS thought_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
+            start_time TEXT,
+            end_time TEXT,
             length INTEGER,
             depth INTEGER,
             thought_log TEXT,
@@ -194,14 +196,14 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> insertPillData(Map<String, dynamic> data) async {
+  Future<int> insertMedicineData(Map<String, dynamic> data) async {
     final db = await database;
     int id = await db.insert('pill_data', data);
     _logger.info('Inserted pill data with id: $id');
     return id;
   }
 
-  Future<int> updatePillData(int id, Map<String, dynamic> newData) async {
+  Future<int> updateMedicineData(int id, Map<String, dynamic> newData) async {
     final db = await database;
     _logger.info('Updating pill data with id: $id with newData: $newData');
     return await db.update(
@@ -212,7 +214,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> deletePillData(int id) async {
+  Future<int> deleteMedicineData(int id) async {
     final db = await database;
     _logger.info('Deleting pill data with id: $id');
     return await db.delete(
@@ -222,7 +224,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<Map<String, String?>> getPillDetails(String pillName) async {
+  Future<Map<String, String?>> getMedicineDetails(String pillName) async {
     final db = await database;
     _logger.info('Querying pill details for: $pillName');
     
@@ -248,7 +250,7 @@ class DatabaseHelper {
     return {'dosage': null, 'unit': null};
   }
 
-  Future<List<String>> getPillUnits() async {
+  Future<List<String>> getMedicineUnits() async {
     final db = await database;
     _logger.info('Querying distinct pill units');
 
@@ -262,13 +264,13 @@ class DatabaseHelper {
 
   
 
-  Future<List<Map<String, dynamic>>> getPillData() async {
+  Future<List<Map<String, dynamic>>> getMedicineData() async {
     final db = await database;
     _logger.info('Querying all pill data');
     return await db.query('pill_data', orderBy: 'timestamp DESC');
   }
 
-  Future<List<String>> getPillNames() async {
+  Future<List<String>> getMedicineNames() async {
     final db = await database;
     _logger.info('Querying distinct pill names');
 

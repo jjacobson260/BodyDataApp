@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'database_helper.dart';
 
 class DateTimePickerDialog extends StatefulWidget {
   final DateTime initialDateTime;
@@ -54,11 +53,22 @@ class _DateTimePickerDialogState extends State<DateTimePickerDialog> {
     }
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(Icons.schedule), // Clock icon
-      onPressed: () => _selectDateTime(context), // Open date and time picker
+    return InkWell(
+      onTap: () => _selectDateTime(context),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Clock icon      
+            Text(DateFormat('MM-dd-yy HH:mm').format(_selectedDateTime)),
+            SizedBox(width: 8), 
+            Icon(Icons.schedule), // Display selected datetime
+          ],
+        ),
+      ),
     );
   }
 }

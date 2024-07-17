@@ -46,7 +46,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
             content: SingleChildScrollView(
               child: Column(
                 children: [
-                  Center(child: Text('Depth $_depth')),
+                  Center(child: Text('Depth: $_depth')),
                   Slider(
                     value: _depth.toDouble(),
                     min: 1,
@@ -103,6 +103,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
 
                         final latestId = latestEntry['id'];
                         final thoughtData = {
+                          'endtime': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
                           'length': thoughtTime,
                           'depth': _depth,
                           'thought_log': _entry,

@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'home_page.dart';
 import 'poop_data_page.dart';
-import 'pill_data_page.dart';
+import 'medicine_data_page.dart';
 import 'food_data_page.dart';
 import 'journal_data_page.dart';
 import 'sleep_data_page.dart';
@@ -21,9 +21,6 @@ void main() async {
   // Request necessary permissions
   await requestPermissions();
 
-  // Initialize Database
-  //DatabaseHelper db_helper;
-  //await db_helper._initDatabase();
   // Initialize the appropriate database factory
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     // Initialize sqflite_common_ffi for desktop
@@ -70,7 +67,36 @@ void _setupLogging() {
   });
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // The app is now in the foreground
+      print('App resumed');
+      // Add your code to check for sleep or thought entries here
+    } else if (state == AppLifecycleState.paused) {
+      // The app is now in the background
+      print('App paused');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -81,7 +107,7 @@ class MyApp extends StatelessWidget {
       home: HomePage(),
       routes: {
         '/poopData': (context) => PoopDataPage(),
-        '/pillData': (context) => PillDataPage(),
+        '/medicineData': (context) => MedicineDataPage(),
         '/journalData': (context) => JournalDataPage(),
         '/foodData': (context) => FoodDataPage(),
         '/moodData': (context) => MoodDataPage(),
