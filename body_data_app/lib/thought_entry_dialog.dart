@@ -19,27 +19,6 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
 
   final Logger _logger = Logger('ThoughtEntryDialog');
 
-  Future<void> _saveData() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-
-      String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-
-      Map<String, dynamic> thoughtData = {
-        'timestamp': timestamp,
-        'thought_log': _entry,
-      };
-
-      await DatabaseHelper().insertJournalData(thoughtData);
-
-      Navigator.of(context).pop(); // Close the dialog
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Thought Entry Saved'),
-      ));
-    }
-  }
-
   int calculateMinutesBetween(DateTime startDateTime, DateTime endDateTime) {
     Duration difference = endDateTime.difference(startDateTime);
     int differenceInMinutes = difference.inMinutes;
@@ -47,10 +26,16 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
     return differenceInMinutes;
   }
 
-  void _checkStillAsleepEntry() async {
+  @override
+  void initState() {
+    super.initState();
+    _checkStillThinkingEntry();
+  }
+
+  void _checkStillThinkingEntry() async {
     final dbHelper = DatabaseHelper();
     final latestEntry = await dbHelper.getStillThinkingEntry();
-
+    _logger.info("checkStillThinking Called");
     if (latestEntry != null) {
       // Still asleep entry found, prompt user to update
       showDialog(
@@ -78,7 +63,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
                     key: _formKey,
                     child: TextFormField(
                       decoration: InputDecoration(labelText: 'Thought Entry'),
-                      maxLines: 100,
+                      maxLines: 17,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please Enter Your Thoughts';

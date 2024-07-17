@@ -85,16 +85,6 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
                 },
               ),
               SizedBox(height: 8),
-              _image != null
-                ? Center(
-                    child: Image.file(
-                    _image!,
-                    width: 200,
-                    height: 200,
-                    fit: BoxFit.cover,
-                  ))
-                : SizedBox.shrink(),
-              SizedBox(height: 8),
               ImageSelector(
                 onImageSelected: (image) {
                   setState(() {

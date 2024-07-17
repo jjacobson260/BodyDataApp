@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:your_app/sleep_entry_dialog.dart';
+import 'package:body_data_app/sleep_entry_dialog.dart';
 
 void main() {
   testWidgets('SleepEntryDialog has required fields and buttons', (WidgetTester tester) async {

@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
+import 'image_selector_widget.dart';
+
 
 class JournalEntryDialog extends StatefulWidget {
   @override
@@ -10,6 +13,7 @@ class JournalEntryDialog extends StatefulWidget {
 class _JournalEntryDialogState extends State<JournalEntryDialog> {
   final _formKey = GlobalKey<FormState>();
   String _entry = '';
+  File? _image;
 
   Future<void> _saveData() async {
     if (_formKey.currentState!.validate()) {
@@ -20,6 +24,7 @@ class _JournalEntryDialogState extends State<JournalEntryDialog> {
       Map<String, dynamic> journalData = {
         'timestamp': timestamp,
         'entry': _entry,
+        'image_path': _image?.path,
       };
 
       await DatabaseHelper().insertJournalData(journalData);
@@ -43,7 +48,7 @@ class _JournalEntryDialogState extends State<JournalEntryDialog> {
               key: _formKey,
               child: TextFormField(
                 decoration: InputDecoration(labelText: 'Journal Entry'),
-                maxLines: 100,
+                maxLines: 17,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a journal entry';
@@ -53,8 +58,17 @@ class _JournalEntryDialogState extends State<JournalEntryDialog> {
                 onSaved: (value) {
                   _entry = value!;
                 },
+              ),   
+            ),
+            SizedBox(height: 8),
+              ImageSelector(
+                onImageSelected: (image) {
+                  setState(() {
+                    _image = image;
+                  });
+                },
               ),
-            )
+
           ]
         )
       ),

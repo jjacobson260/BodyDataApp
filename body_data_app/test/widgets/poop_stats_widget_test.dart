@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:your_app/poop_stats_widget.dart';
-import 'package:your_app/database_helper.dart';
+import 'package:body_data_app/poop_stats_widget.dart';
+import 'package:body_data_app/database_helper.dart';
 
 void main() {
   testWidgets('PoopStatsWidget shows loading indicator', (WidgetTester tester) async {

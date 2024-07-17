@@ -265,7 +265,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getPillData() async {
     final db = await database;
     _logger.info('Querying all pill data');
-    return await db.query('pill_data');
+    return await db.query('pill_data', orderBy: 'timestamp DESC');
   }
 
   Future<List<String>> getPillNames() async {
@@ -289,7 +289,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getFoodData() async {
     final db = await database;
     _logger.info('Querying all food data');
-    return await db.query('food_data', orderBy: 'timestamp ASC');
+    return await db.query('food_data', orderBy: 'timestamp DESC');
   }
 
   Future<void> insertMoodData(Map<String, dynamic> moodData) async {
@@ -312,7 +312,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getMoodData() async {
     final db = await database;
     _logger.info('Querying all mood data');
-    return await db.query('mood_data', orderBy: 'timestamp ASC');
+    return await db.query('mood_data', orderBy: 'timestamp DESC');
   }
 
   Future<void> insertJournalData(Map<String, dynamic> journalData) async {
@@ -324,7 +324,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getJournalData() async {
     final db = await database;
     _logger.info('Querying all journal data');
-    return await db.query('journal_data', orderBy: 'timestamp ASC');
+    return await db.query('journal_data', orderBy: 'timestamp DESC');
   }
 
   Future<void> insertSleepData(Map<String, dynamic> sleepData) async {
@@ -402,7 +402,7 @@ class DatabaseHelper {
       )
     ''');
     await db.insert('thought_data', thoughtData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted mood data');
+    _logger.info('Inserted thought data');
   }
 
   Future<int> updateThoughtData(int id, Map<String, dynamic> newData) async {

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'poop_entry_dialog.dart';
 import 'poop_data_page.dart';
@@ -16,14 +17,16 @@ import 'sleep_data_page.dart';
 import 'thought_entry_dialog.dart';
 import 'thought_data_page.dart';
 import 'database_helper.dart';
-
+import 'package:logging/logging.dart';
 
 class HomePage extends StatefulWidget {
+  HomePage({Key? key}) : super(key: key);
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Color poopButtonColor = Colors.red;
   Color pillButtonColor = Colors.orange;
   Color foodButtonColor = Colors.yellow;
@@ -35,9 +38,43 @@ class _HomePageState extends State<HomePage> {
   bool isSleepButtonActive = false;
   bool isThoughtButtonActive = false;
 
+  final Logger _logger = Logger('DatabaseHelper');
+
+  
   @override
   void initState() {
     super.initState();
+    _logger.info("HomePage initialized");
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final lifecycleState = WidgetsBinding.instance.lifecycleState;
+      if (lifecycleState != null) {
+        _checkAppLifecycleState(lifecycleState);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance!.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    _checkAppLifecycleState(state);
+  }
+
+  void _checkAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _logger.info("App resumed");
+      _checkAndRunFunctions(); // Replace with your function names
+    }
+  }
+
+  void _checkAndRunFunctions() {
+    // Example: Checking and running sleep and thought functions
     _checkAndShowSleepDialog();
     _checkAndShowThoughtDialog();
   }
@@ -67,6 +104,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _checkAndShowSleepDialog() async {
+    _logger.info("Checking STILL_ASLEEP value");
     final db = await DatabaseHelper().database;
     await db.execute('''
       CREATE TABLE IF NOT EXISTS sleep_data (
@@ -87,6 +125,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (sleepLogs.isNotEmpty) {
+      _logger.info("STILL_ASLEEP is true");
       final sleepLog = sleepLogs.first;
       final sleepLogId = sleepLog['id'];
       final sleepTime = DateTime.parse(sleepLog['sleep_time']);
@@ -115,7 +154,7 @@ class _HomePageState extends State<HomePage> {
     await DatabaseHelper().insertSleepData(sleepData);
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Sleep Time Started'),
+      content: Text('Sleep Time Started, tap again to cancel'),
     ));
   }
 
@@ -145,7 +184,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _checkAndShowThoughtDialog() async {
+    _logger.info("Checking STILL_THINKING value");
     final db = await DatabaseHelper().database;
+    //remove when this works
     await db.execute('''
       CREATE TABLE IF NOT EXISTS thought_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -165,6 +206,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (thoughtLogs.isNotEmpty) {
+      _logger.info("STILL THINKING is true");
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
           context: context,
@@ -185,13 +227,13 @@ class _HomePageState extends State<HomePage> {
         'length': null,
         'depth': null,
         'thought_log': null,
-        'STILL_THINKING': true
+        'STILL_THINKING': 1
       };
     
-    //await DatabaseHelper().insertThoughtData(thoughtData: thoughtData);
+    await DatabaseHelper().insertThoughtData(thoughtData);
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Thought Time Started'),
+      content: Text('Thought Time Started, tap again to cancel'),
     ));
   }
 

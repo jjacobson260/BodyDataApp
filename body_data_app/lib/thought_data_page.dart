@@ -62,14 +62,14 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
           final log = _thoughtLogs[index];
           final timestamp = log['timestamp'];
           final length = log['length'];
-          final thoughtMinutes = length.isNotEmpty ? _calculateThoughtMinutes(log['timestamp']) : '';
+          final thoughtMinutes = length != null ? _calculateThoughtMinutes(log['timestamp'],) : '';
           final depth = log['depth'];
           final thoughtLog = log['thought_data'] ?? '';
 
           return Card(
             child: ListTile(
               title: Text('$timestamp'),
-              subtitle: Text('Dream Log: $thoughtLog'),
+              subtitle: Text('length: $length \ndepth: $depth \nThought Log: $thoughtLog'),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
