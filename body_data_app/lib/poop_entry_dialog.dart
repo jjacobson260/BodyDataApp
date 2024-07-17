@@ -54,6 +54,33 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
     Navigator.of(context).pop();
   }
 
+  void _showBristolChart() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          titlePadding: EdgeInsets.all(0),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0),
+                child: Text('Bristol Rating Chart'),
+              ),
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+          content: Image.asset('assets/bristol_stool_chart.jpg'),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -91,7 +118,16 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
               },
             ),
             SizedBox(height: 16),
-            Text('Bristol Rating: $_bristolRating'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Bristol Rating: $_bristolRating'),
+                IconButton(
+                  icon: Icon(Icons.info_outline),
+                  onPressed: _showBristolChart,
+                ),
+              ],
+            ),
             Slider(
               value: _bristolRating.toDouble(),
               min: 1,
