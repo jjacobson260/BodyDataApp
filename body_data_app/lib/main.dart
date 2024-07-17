@@ -104,7 +104,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: BodyDataHomePage(),
       routes: {
         '/poopData': (context) => PoopDataPage(),
         '/medicineData': (context) => MedicineDataPage(),

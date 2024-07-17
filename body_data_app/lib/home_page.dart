@@ -21,14 +21,14 @@ import 'thought_options_dialog.dart';
 import 'database_helper.dart';
 import 'package:logging/logging.dart';
 
-class HomePage extends StatefulWidget {
-  HomePage({Key? key}) : super(key: key);
+class BodyDataHomePage extends StatefulWidget {
+  BodyDataHomePage({Key? key}) : super(key: key);
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _BodyDataHomePageState createState() => _BodyDataHomePageState();
 }
 
-class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBindingObserver {
   Color poopButtonColor = Colors.red;
   Color medicineButtonColor = Colors.orange;
   Color foodButtonColor = Colors.yellow;
