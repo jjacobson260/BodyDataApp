@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:logging/logging.dart';
 import 'package:intl/intl.dart';
+import 'ingredient.dart';
 
 
 class DatabaseHelper {
@@ -93,7 +94,7 @@ class DatabaseHelper {
           )
         ''');
         await db.execute('''
-          CREATE TABLE IF NOT EXISTS thought_log (
+          CREATE TABLE IF NOT EXISTS thought_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             start_time TEXT,
@@ -102,6 +103,16 @@ class DatabaseHelper {
             depth INTEGER,
             thought_log TEXT,
             STILL_THINKING INT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS ingredients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT,
+            last_used TEXT,
+            name TEXT,
+            category TEXT,
+            icon TEXT
           )
         ''');
       },
@@ -457,4 +468,118 @@ class DatabaseHelper {
     }
     return null;
   }
+
+  Future<void> insertIngredient(Ingredient ingredient) async {
+    final db = await database;
+    final ingredientData = {
+      'created_at': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
+      'last_used': null,
+      'name': ingredient.name,
+      'category': ingredient.category,
+      'icon': ingredient.icon
+    };
+    await db.insert(
+      'ingredients',
+      ingredientData,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  Future<void> updateIngredient(Map<String, dynamic> ingredient) async {
+    final db = await database;
+    await db.update(
+      'ingredients',
+      ingredient,
+      where: 'id = ?',
+      whereArgs: [ingredient['id']],
+    );
+  }
+
+  Future<void> deleteIngredient(int id) async {
+    final db = await database;
+    await db.delete(
+      'ingredients',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> useIngredient(Ingredient ingredient) async {
+    final db = await database;
+    final updateData = {'last_used': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())};
+    await db.update(
+      'ingredients',
+      updateData,
+      where: 'name = ?',
+      whereArgs: [ingredient.name],
+    );
+  }
+
+  Future<List<Ingredient>> getAllIngredients() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('ingredients');
+
+    return List.generate(maps.length, (i) {
+      return Ingredient(
+        name: maps[i]['name'],
+        category: maps[i]['category'],
+        icon: maps[i]['icon'],
+      );
+    });
+  }
+
+  Future<List<Ingredient>> getIngredientsByRecency() async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'ingredients',
+      orderBy: 'last_used DESC, name ASC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return Ingredient(
+        name: maps[i]['name'],
+        category: maps[i]['category'],
+        icon: maps[i]['icon'],
+      );
+    });
+  }
+
+  Future<List<Ingredient>> getIngredientsCategoryByRecency(String category) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT * FROM ingredients
+      WHERE category = ?
+      ORDER BY last_used DESC, name ASC
+    ''', [category]);
+
+    return List.generate(maps.length, (i) {
+      return Ingredient(
+        name: maps[i]['name'],
+        category: maps[i]['category'],
+        icon: maps[i]['icon'],
+      );
+    });
+  }
+
+  Future<List<Ingredient>> getIngredientsByNamePrefix(Database db, String prefix) async {
+    final List<Map<String, dynamic>> maps = await db.query(
+      'ingredients',
+      where: 'name LIKE ?',
+      whereArgs: ['%$prefix%'],
+      orderBy: 'name ASC',
+    );
+  
+    return List.generate(maps.length, (i) {
+      return Ingredient(
+        name: maps[i]['name'],
+        category: maps[i]['category'],
+        icon: maps[i]['icon'],
+      );
+    });
+
+  }
+
+
 }

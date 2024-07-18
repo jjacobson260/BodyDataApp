@@ -84,7 +84,7 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Row(
+      title: Column (
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Enter Poop Data'),

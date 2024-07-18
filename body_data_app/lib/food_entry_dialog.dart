@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'database_helper.dart';
 import 'date_time_picker_dialog.dart'; 
 import 'image_selector_widget.dart';
+import 'ingredient_picker.dart';
+import 'ingredient.dart';
 
 class FoodEntryDialog extends StatefulWidget {
   @override
@@ -16,6 +18,10 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
   TextEditingController _descriptionController = TextEditingController();
   DateTime _selectedDateTime = DateTime.now(); // Track selected datetime
   File? _image;
+
+  List<Ingredient> _ingredients = []; // List of all ingredients
+  List<Ingredient> _selectedIngredients = []; // List of selected ingredients
+
 
   final picker = ImagePicker();
 
@@ -50,10 +56,16 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
     });
   }
 
+  void _onIngredientSelectionChanged(List<Ingredient> selectedIngredients) {
+    setState(() {
+      _selectedIngredients = selectedIngredients;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Row(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Enter Food Data'),
@@ -85,6 +97,10 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
                 },
               ),
               SizedBox(height: 8),
+              IngredientPicker(
+                selectedIngredients: _selectedIngredients,
+                onSelectionChanged: _onIngredientSelectionChanged,
+              ),              SizedBox(height: 8),
               ImageSelector(
                 onImageSelected: (image) {
                   setState(() {

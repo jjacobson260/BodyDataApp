@@ -92,7 +92,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Row(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Enter Medicine Data'),
