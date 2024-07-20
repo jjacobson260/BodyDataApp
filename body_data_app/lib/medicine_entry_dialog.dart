@@ -20,15 +20,15 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
   late String _dosage = '';
   late String _selectedUnit = '';
   String _newUnit = '';
-  List<String> _pillNames = [];
-  List<String> _pillUnits = ['mg', 'count'];
+  List<String> _medicineNames = [];
+  List<String> _medicineUnits = ['mg', 'count'];
   late DateTime _selectedDateTime = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     if (widget.isEditMode && widget.initialData != null) {
-      _selectedMedicineName = widget.initialData!['pill_name'];
+      _selectedMedicineName = widget.initialData!['medicine_name'];
       _dosage = widget.initialData!['dosage'];
       _selectedUnit = widget.initialData!['unit'];
       _selectedDateTime = DateTime.parse(widget.initialData!['timestamp']);
@@ -40,20 +40,20 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
   Future<void> _fetchMedicineNames() async {
     List<String> names = await DatabaseHelper().getMedicineNames();
     setState(() {
-      _pillNames = names;
+      _medicineNames = names;
     });
   }
 
   Future<void> _fetchMedicineUnits() async {
     List<String> units = await DatabaseHelper().getMedicineUnits();
     setState(() {
-      _pillUnits.addAll(units);
-      _pillUnits = _pillUnits.toSet().toList(); // Remove duplicates
+      _medicineUnits.addAll(units);
+      _medicineUnits = _medicineUnits.toSet().toList(); // Remove duplicates
     });
   }
 
-  Future<void> _fetchMedicineDetails(String pillName) async {
-    Map<String, String?> details = await DatabaseHelper().getMedicineDetails(pillName);
+  Future<void> _fetchMedicineDetails(String medicineName) async {
+    Map<String, String?> details = await DatabaseHelper().getMedicineDetails(medicineName);
     setState(() {
       _dosage = details['dosage'] ?? '';
       _selectedUnit = details['unit'] ?? '';
@@ -64,13 +64,13 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      String pillName = _selectedMedicineName == 'New Medicine' ? _newMedicineName : _selectedMedicineName;
+      String medicineName = _selectedMedicineName == 'New Medicine' ? _newMedicineName : _selectedMedicineName;
       String unit = _selectedUnit == 'New Unit' ? _newUnit : _selectedUnit;
       String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
 
       Map<String, dynamic> data = {
         'timestamp': timestamp,
-        'pill_name': pillName,
+        'medicine_name': medicineName,
         'dosage': _dosage,
         'unit': unit,
       };
@@ -115,7 +115,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
               DropdownButtonFormField<String>(
                 value: _selectedMedicineName.isNotEmpty ? _selectedMedicineName : null,
                 decoration: InputDecoration(labelText: 'Medicine Name'),
-                items: _pillNames.map((name) {
+                items: _medicineNames.map((name) {
                   return DropdownMenuItem<String>(
                     value: name,
                     child: Text(name),
@@ -140,7 +140,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                 },
                 validator: (value) {
                   if ((value == null || value.isEmpty) && _newMedicineName.isEmpty) {
-                    return 'Please select or enter a pill name';
+                    return 'Please select or enter a medicine name';
                   }
                   return null;
                 },
@@ -150,7 +150,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                   decoration: InputDecoration(labelText: 'New Medicine Name'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a new pill name';
+                      return 'Please enter a new medicine name';
                     }
                     return null;
                   },
@@ -177,7 +177,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
               DropdownButtonFormField<String>(
                 value: _selectedUnit.isNotEmpty ? _selectedUnit : null,
                 decoration: InputDecoration(labelText: 'Unit'),
-                items: _pillUnits.map((unit) {
+                items: _medicineUnits.map((unit) {
                   return DropdownMenuItem<String>(
                     value: unit,
                     child: Text(unit),

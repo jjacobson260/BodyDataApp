@@ -96,11 +96,12 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
                   return null;
                 },
               ),
-              SizedBox(height: 8),
+              /*SizedBox(height: 8),
               IngredientPicker(
                 selectedIngredients: _selectedIngredients,
                 onSelectionChanged: _onIngredientSelectionChanged,
-              ),              SizedBox(height: 8),
+              ),  */            
+              SizedBox(height: 8),
               ImageSelector(
                 onImageSelected: (image) {
                   setState(() {

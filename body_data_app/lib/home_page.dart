@@ -54,6 +54,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
         _checkAppLifecycleState(lifecycleState);
       }
     });
+    
   }
 
   @override
@@ -108,7 +109,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void _checkAndShowSleepDialog() async {
     _logger.info("Checking STILL_ASLEEP value");
     final db = await DatabaseHelper().database;
-    await db.execute('ALTER TABLE medicine_data RENAME TO medicine_data');
+    await db.execute('DROP TABLE journal_data');
     await db.execute('''
       CREATE TABLE IF NOT EXISTS sleep_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,6 +120,88 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
         STILL_ASLEEP INTEGER
       )
     ''');
+    await db.execute('''
+          CREATE TABLE IF NOT EXISTS poop_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            bristol_rating INTEGER,
+            urgency INTEGER,
+            blood BOOLEAN
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS medicine_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            medicine_name TEXT,
+            dosage TEXT,
+            unit TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS food_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            description TEXT,
+            image_path TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS mood_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            rating INTEGER,
+            moods TEXT,
+            note TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS journal_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            entry TEXT,
+            image_path TEXT,
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS export_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            export_type TEXT,
+            last_export TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS sleep_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            sleep_time TEXT,
+            wake_time TEXT,
+            dream_log TEXT,
+            STILL_ASLEEP INTEGER
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS thought_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            start_time TEXT,
+            end_time TEXT,
+            length INTEGER,
+            depth INTEGER,
+            thought_log TEXT,
+            STILL_THINKING INT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS ingredients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT,
+            last_used TEXT,
+            name TEXT,
+            category TEXT,
+            icon TEXT
+          )
+        ''');
     final List<Map<String, dynamic>> sleepLogs = await db.query(
       'sleep_data',
       where: 'STILL_ASLEEP = ?',

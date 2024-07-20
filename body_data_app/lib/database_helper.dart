@@ -44,10 +44,10 @@ class DatabaseHelper {
           )
         ''');
         await db.execute('''
-          CREATE TABLE IF NOT EXISTS pill_data (
+          CREATE TABLE IF NOT EXISTS medicine_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
-            pill_name TEXT,
+            medicine_name TEXT,
             dosage TEXT,
             unit TEXT
           )
@@ -73,7 +73,8 @@ class DatabaseHelper {
           CREATE TABLE IF NOT EXISTS journal_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
-            entry TEXT
+            entry TEXT,
+            image_path TEXT
           )
         ''');
         await db.execute('''
@@ -209,16 +210,16 @@ class DatabaseHelper {
 
   Future<int> insertMedicineData(Map<String, dynamic> data) async {
     final db = await database;
-    int id = await db.insert('pill_data', data);
-    _logger.info('Inserted pill data with id: $id');
+    int id = await db.insert('medicine_data', data);
+    _logger.info('Inserted medicine data with id: $id');
     return id;
   }
 
   Future<int> updateMedicineData(int id, Map<String, dynamic> newData) async {
     final db = await database;
-    _logger.info('Updating pill data with id: $id with newData: $newData');
+    _logger.info('Updating medicine data with id: $id with newData: $newData');
     return await db.update(
-      'pill_data',
+      'medicine_data',
       newData,
       where: 'id = ?',
       whereArgs: [id],
@@ -227,35 +228,35 @@ class DatabaseHelper {
 
   Future<int> deleteMedicineData(int id) async {
     final db = await database;
-    _logger.info('Deleting pill data with id: $id');
+    _logger.info('Deleting medicine data with id: $id');
     return await db.delete(
-      'pill_data',
+      'medicine_data',
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  Future<Map<String, String?>> getMedicineDetails(String pillName) async {
+  Future<Map<String, String?>> getMedicineDetails(String medicineName) async {
     final db = await database;
-    _logger.info('Querying pill details for: $pillName');
+    _logger.info('Querying medicine details for: $medicineName');
     
     List<Map<String, dynamic>> result = await db.query(
-      'pill_data',
+      'medicine_data',
       columns: ['dosage', 'unit'],
-      where: 'pill_name = ?',
-      whereArgs: [pillName],
+      where: 'medicine_name = ?',
+      whereArgs: [medicineName],
       orderBy: 'timestamp ASC',
       limit: 1,
     );
 
     if (result.isNotEmpty) {
-      _logger.info('Found pill details for: $pillName');
+      _logger.info('Found medicine details for: $medicineName');
       return {
         'dosage': result.first['dosage'] as String?,
         'unit': result.first['unit'] as String?,
       };
     } else {
-      _logger.info('No pill details found for: $pillName');
+      _logger.info('No medicine details found for: $medicineName');
     }
 
     return {'dosage': null, 'unit': null};
@@ -263,34 +264,34 @@ class DatabaseHelper {
 
   Future<List<String>> getMedicineUnits() async {
     final db = await database;
-    _logger.info('Querying distinct pill units');
+    _logger.info('Querying distinct medicine units');
 
-    var result = await db.rawQuery('SELECT DISTINCT unit FROM pill_data');
-    List<String> pillUnits = result.map((e) => e['unit'] as String).toList();
+    var result = await db.rawQuery('SELECT DISTINCT unit FROM medicine_data');
+    List<String> medicineUnits = result.map((e) => e['unit'] as String).toList();
 
-    _logger.info('Found ${pillUnits.length} distinct pill units');
+    _logger.info('Found ${medicineUnits.length} distinct medicine units');
 
-    return pillUnits;
+    return medicineUnits;
   }
 
   
 
   Future<List<Map<String, dynamic>>> getMedicineData() async {
     final db = await database;
-    _logger.info('Querying all pill data');
-    return await db.query('pill_data', orderBy: 'timestamp DESC');
+    _logger.info('Querying all medicine data');
+    return await db.query('medicine_data', orderBy: 'timestamp DESC');
   }
 
   Future<List<String>> getMedicineNames() async {
     final db = await database;
-    _logger.info('Querying distinct pill names');
+    _logger.info('Querying distinct medicine names');
 
-    var result = await db.rawQuery('SELECT DISTINCT pill_name FROM pill_data');
-    List<String> pillNames = result.map((e) => e['pill_name'] as String).toList();
+    var result = await db.rawQuery('SELECT DISTINCT medicine_name FROM medicine_data');
+    List<String> medicineNames = result.map((e) => e['medicine_name'] as String).toList();
 
-    _logger.info('Found ${pillNames.length} distinct pill names');
+    _logger.info('Found ${medicineNames.length} distinct medicine names');
 
-    return pillNames;
+    return medicineNames;
   }
 
   Future<void> insertFoodData(Map<String, dynamic> foodData) async {

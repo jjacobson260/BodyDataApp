@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'medicine_entry_dialog.dart';
 
-
 class MedicineDataPage extends StatefulWidget {
   @override
   MedicineDataPageState createState() => MedicineDataPageState();
@@ -51,16 +50,22 @@ class MedicineDataPageState extends State<MedicineDataPage> {
       body: ListView.builder(
         itemCount: records.length,
         itemBuilder: (context, index) {
+          final record = records[index];
+          final medicineName = record['medicine_name'] ?? 'Unknown';
+          final dosage = record['dosage']?.toString() ?? 'Unknown';
+          final unit = record['unit'] ?? 'Unknown';
+          final timestamp = record['timestamp'] ?? 'Unknown';
+          final id = record['id'] ?? 0;
+
           return ListTile(
-            title: Text(records[index]['medicine_name']),
-            subtitle: Text(
-                'Dosage: ${records[index]['dosage']} ${records[index]['unit']} at ${records[index]['timestamp']}'),
+            title: Text(medicineName),
+            subtitle: Text('Dosage: $dosage $unit at $timestamp'),
             trailing: PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'Edit') {
-                  _editRecord(records[index]);
+                  _editRecord(record);
                 } else if (value == 'Delete') {
-                  _deleteRecord(records[index]['id']);
+                  _deleteRecord(id);
                 }
               },
               itemBuilder: (BuildContext context) {
