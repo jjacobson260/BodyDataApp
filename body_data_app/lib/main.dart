@@ -18,10 +18,15 @@ import 'database_helper.dart';
 import 'drift_database.dart';
 import 'dart:io';
 
+
+late final AppDatabase appDatabase;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Request necessary permissions
   await requestPermissions();
+
+
   // Initialize the appropriate database factory
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     // Initialize sqflite_common_ffi for desktop
@@ -31,6 +36,8 @@ void main() async {
     // Initialize sqflite for mobile
     databaseFactory = databaseFactory; // This is just to emphasize we're using the default factory for mobile
   }
+
+  appDatabase = await AppDatabase();
   _setupLogging();
   // Run your Flutter app
   runApp(MyApp());

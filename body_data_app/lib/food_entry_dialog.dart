@@ -1,12 +1,14 @@
 import 'dart:io';
+import 'package:body_data_app/main.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'database_helper.dart';
 import 'date_time_picker_dialog.dart'; 
 import 'image_selector_widget.dart';
 import 'ingredient_picker.dart';
 import 'ingredient.dart';
+import 'drift_database_helper.dart';
+import 'drift_tables.dart';
 
 class FoodEntryDialog extends StatefulWidget {
   @override
@@ -34,8 +36,7 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
       'description': _descriptionController.text,
       'image_path': _image?.path,
     };
-
-    await DatabaseHelper().insertFoodData(foodData);
+    await DriftDatabaseHelper(appDatabase).insert(FoodData(), foodData);
 
     Navigator.of(context).pop();
 
