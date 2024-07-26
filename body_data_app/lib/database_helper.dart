@@ -74,7 +74,6 @@ class DatabaseHelper {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             entry TEXT,
-            image_path TEXT
           )
         ''');
         await db.execute('''
@@ -584,3 +583,4 @@ class DatabaseHelper {
 
 
 }
+ 

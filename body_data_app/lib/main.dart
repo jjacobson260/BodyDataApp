@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -12,15 +13,15 @@ import 'food_data_page.dart';
 import 'journal_data_page.dart';
 import 'sleep_data_page.dart';
 import 'mood_data_page.dart';
+import 'thought_data_page.dart';
 import 'database_helper.dart';
+import 'drift_database.dart';
 import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   // Request necessary permissions
   await requestPermissions();
-
   // Initialize the appropriate database factory
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     // Initialize sqflite_common_ffi for desktop
@@ -112,6 +113,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         '/foodData': (context) => FoodDataPage(),
         '/moodData': (context) => MoodDataPage(),
         '/sleepData': (context) => SleepDataPage(),
+        '/thoughtData': (context) => ThoughtDataPage(),
       },
     );
   }
