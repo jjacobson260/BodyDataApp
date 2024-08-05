@@ -69,7 +69,7 @@ int _poopEstimateSize(
 ) {
   var bytesCount = offsets.last;
   {
-    final value = object.image_path;
+    final value = object.imagePath;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
@@ -91,7 +91,7 @@ void _poopSerialize(
 ) {
   writer.writeBool(offsets[0], object.blood);
   writer.writeLong(offsets[1], object.bristolRating);
-  writer.writeString(offsets[2], object.image_path);
+  writer.writeString(offsets[2], object.imagePath);
   writer.writeString(offsets[3], object.location);
   writer.writeDateTime(offsets[4], object.timestamp);
   writer.writeLong(offsets[5], object.urgency);
@@ -107,7 +107,7 @@ Poop _poopDeserialize(
   object.blood = reader.readBool(offsets[0]);
   object.bristolRating = reader.readLong(offsets[1]);
   object.id = id;
-  object.image_path = reader.readStringOrNull(offsets[2]);
+  object.imagePath = reader.readStringOrNull(offsets[2]);
   object.location = reader.readStringOrNull(offsets[3]);
   object.timestamp = reader.readDateTime(offsets[4]);
   object.urgency = reader.readLong(offsets[5]);

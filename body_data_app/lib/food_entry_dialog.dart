@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'package:body_data_app/main.dart';
+import 'package:body_data_app/models/food.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'date_time_picker_dialog.dart'; 
 import 'image_selector_widget.dart';
 import 'ingredient_picker.dart';
-import 'ingredient.dart';
-import 'drift_database_helper.dart';
-import 'drift_tables.dart';
+import 'ingredient_info.dart';
+import 'database_helper.dart';
 
 class FoodEntryDialog extends StatefulWidget {
   @override
@@ -21,22 +21,24 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
   DateTime _selectedDateTime = DateTime.now(); // Track selected datetime
   File? _image;
 
-  List<Ingredient> _ingredients = []; // List of all ingredients
-  List<Ingredient> _selectedIngredients = []; // List of selected ingredients
+  List<IngredientInfo> _ingredients = []; // List of all ingredients
+  List<IngredientInfo> _selectedIngredients = []; // List of selected ingredients
 
 
   final picker = ImagePicker();
 
 
   Future<void> _saveFoodData() async {
-    String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
 
-    Map<String, dynamic> foodData = {
-      'timestamp': timestamp,
-      'description': _descriptionController.text,
-      'image_path': _image?.path,
-    };
-    await DriftDatabaseHelper(appDatabase).insert(FoodData(), foodData);
+    Food foodData = Food();
+    foodData.timestamp = _selectedDateTime;
+    foodData.description = _descriptionController.text;
+    foodData.image_path = _image?.path;
+    foodData.ingredients_json = '';
+    foodData.location = '';
+    foodData.recipe_id = -1;
+    
+    await DatabaseHelper().insertFoodData(foodData);
 
     Navigator.of(context).pop();
 
@@ -57,7 +59,7 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
     });
   }
 
-  void _onIngredientSelectionChanged(List<Ingredient> selectedIngredients) {
+  void _onIngredientSelectionChanged(List<IngredientInfo> selectedIngredients) {
     setState(() {
       _selectedIngredients = selectedIngredients;
     });

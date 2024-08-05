@@ -17,7 +17,7 @@ class _MoodDataPageState extends State<MoodDataPage> {
   }
 
   Future<void> _fetchMoodData() async {
-    List<Map<String, dynamic>> data = await DatabaseHelper().getMoodData();
+    List<Map<String, dynamic>> data = await DatabaseHelper().getMoodDataAsMap();
     setState(() {
       _moodData = data;
     });

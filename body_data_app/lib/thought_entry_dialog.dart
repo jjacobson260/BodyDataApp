@@ -1,7 +1,9 @@
+import 'package:body_data_app/models/thought.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
 import 'package:logging/logging.dart';
+import 'models/thought.dart';
 
 class ThoughtEntryDialog extends StatefulWidget {
 
@@ -88,7 +90,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
                   children: [
                     TextButton(
                       onPressed: () async {
-                        await dbHelper.deleteThoughtData(latestEntry['id']);
+                        await dbHelper.deleteThoughtData(latestEntry.id);
                         Navigator.of(context).pop();
                       },
                       child: Text('No Thoughts'),
@@ -97,20 +99,20 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
                       onPressed: () async {
                         final now = DateTime.now();
                         // Parse existing sleep time
-                        final startTime = DateFormat('yyyy-MM-dd HH:mm:ss').parse(latestEntry['timestamp']);
+                        final startTime = latestEntry.timestamp;
                         // Add minutes to sleep time
                         final thoughtTime = calculateMinutesBetween(startTime, now);
 
-                        final latestId = latestEntry['id'];
-                        final thoughtData = {
-                          'endtime': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
-                          'length': thoughtTime,
-                          'depth': _depth,
-                          'thought_log': _entry,
-                          'STILL_ASLEEP': 0,
-                        };
-                        _logger.info('Updating: $latestId with data: $thoughtData');
-                        await dbHelper.updateThoughtData(latestId, thoughtData);
+                        Thought thoughtData = Thought();
+                        thoughtData.id = latestEntry.id;
+                        thoughtData.end_time = DateTime.now();
+                        thoughtData.length = thoughtTime;
+                        thoughtData.depth = _depth;
+                        thoughtData.thought_log = _entry;
+                        thoughtData.STILL_THINKING = false;
+
+                        _logger.info('Updating: ${thoughtData.id} with data: $thoughtData');
+                        await dbHelper.updateThoughtData(thoughtData);
 
                         Navigator.of(context).pop();
                       },

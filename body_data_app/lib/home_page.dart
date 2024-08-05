@@ -20,6 +20,8 @@ import 'thought_data_page.dart';
 import 'thought_options_dialog.dart';
 import 'database_helper.dart';
 import 'package:logging/logging.dart';
+import 'models/sleep.dart';
+import 'models/thought.dart';
 
 class BodyDataHomePage extends StatefulWidget {
   BodyDataHomePage({Key? key}) : super(key: key);
@@ -108,113 +110,13 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
 
   void _checkAndShowSleepDialog() async {
     _logger.info("Checking STILL_ASLEEP value");
-    final db = await DatabaseHelper().database;
-    await db.execute('DROP TABLE journal_data');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS sleep_data (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT,
-        sleep_time TEXT,
-        wake_time TEXT,
-        dream_log TEXT,
-        STILL_ASLEEP INTEGER
-      )
-    ''');
-    await db.execute('''
-          CREATE TABLE IF NOT EXISTS poop_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            bristol_rating INTEGER,
-            urgency INTEGER,
-            blood BOOLEAN
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS medicine_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            medicine_name TEXT,
-            dosage TEXT,
-            unit TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS food_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            description TEXT,
-            image_path TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS mood_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            rating INTEGER,
-            moods TEXT,
-            note TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS journal_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            entry TEXT,
-            image_path TEXT,
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS export_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            export_type TEXT,
-            last_export TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS sleep_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            sleep_time TEXT,
-            wake_time TEXT,
-            dream_log TEXT,
-            STILL_ASLEEP INTEGER
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS thought_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            start_time TEXT,
-            end_time TEXT,
-            length INTEGER,
-            depth INTEGER,
-            thought_log TEXT,
-            STILL_THINKING INT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS ingredients (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            created_at TEXT,
-            last_used TEXT,
-            name TEXT,
-            category TEXT,
-            icon TEXT
-          )
-        ''');
-    final List<Map<String, dynamic>> sleepLogs = await db.query(
-      'sleep_data',
-      where: 'STILL_ASLEEP = ?',
-      whereArgs: [1],
-      orderBy: 'timestamp DESC',
-      limit: 1,
-    );
+    final dbHelper = DatabaseHelper();
+    var sleepLog = await dbHelper.getStillAsleepEntry();
 
-    if (sleepLogs.isNotEmpty) {
+    if (sleepLog != null ) {
       _logger.info("STILL_ASLEEP is true");
-      final sleepLog = sleepLogs.first;
-      final sleepLogId = sleepLog['id'];
-      final sleepTime = DateTime.parse(sleepLog['sleep_time']);
+      final sleepLogId = sleepLog.id;
+      final sleepTime = sleepLog.sleep_time;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
@@ -229,14 +131,12 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   
   void _insertSleepData(BuildContext context) async {
     
-    String currentTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-    final sleepData = {
-      'timestamp': currentTime,
-      'sleep_time': currentTime,
-      'wake_time': null,
-      'dream_log': null,
-      'STILL_ASLEEP': 1
-    };
+    final currentTime = DateTime.now();
+    Sleep sleepData = Sleep();
+    sleepData.timestamp = currentTime;
+    sleepData.sleep_time = currentTime; 
+    sleepData.STILL_ASLEEP = true;
+
     await DatabaseHelper().insertSleepData(sleepData);
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -271,29 +171,10 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
 
   void _checkAndShowThoughtDialog() async {
     _logger.info("Checking STILL_THINKING value");
-    final db = await DatabaseHelper().database;
-    await db.execute('DROP TABLE thought_data');
-    await db.execute('''
-          CREATE TABLE IF NOT EXISTS thought_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            start_time TEXT,
-            end_time TEXT,
-            length INTEGER,
-            depth INTEGER,
-            thought_log TEXT,
-            STILL_THINKING INT
-          )
-        ''');
-    final List<Map<String, dynamic>> thoughtLogs = await db.query(
-      'thought_data',
-      where: 'STILL_THINKING = ?',
-      whereArgs: [1],
-      orderBy: 'timestamp DESC',
-      limit: 1,
-    );
+    final dbHelper = DatabaseHelper();
+    final thought = await dbHelper.getStillThinkingEntry();
 
-    if (thoughtLogs.isNotEmpty) {
+    if (thought != null) {
       _logger.info("STILL THINKING is true");
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
@@ -308,15 +189,14 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
 
 
   void _insertThoughtData(BuildContext context) async {
-    String currentTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+    final currentTime = DateTime.now();
 
-    Map<String, dynamic> thoughtData = {
-        'timestamp': currentTime,
-        'length': null,
-        'depth': null,
-        'thought_log': null,
-        'STILL_THINKING': 1
-      };
+    var thoughtData = Thought();
+    thoughtData.timestamp = currentTime;
+    thoughtData.length = null;
+    thoughtData.depth = null;
+    thoughtData.thought_log = '';
+    thoughtData.STILL_THINKING = true;
     
     await DatabaseHelper().insertThoughtData(thoughtData);
 

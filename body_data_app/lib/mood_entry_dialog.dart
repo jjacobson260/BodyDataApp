@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
 import 'emoji_selection_widget.dart';
+import 'models/mood.dart';
 
 class MoodEntryDialog extends StatefulWidget {
   @override
@@ -18,14 +19,13 @@ class _MoodEntryDialogState extends State<MoodEntryDialog> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+      DateTime timestamp = DateTime.now();
 
-      Map<String, dynamic> moodData = {
-        'timestamp': timestamp,
-        'rating': _moodRating,
-        'moods': _selectedEmojis.join('|'),
-        'note': _note,
-      };
+      Mood moodData = Mood();
+      moodData.timestamp = timestamp;
+      moodData.rating = _moodRating;
+      moodData.moods_json = _selectedEmojis.join('|');
+      moodData.note = _note;
 
       await DatabaseHelper().insertMoodData(moodData);
 

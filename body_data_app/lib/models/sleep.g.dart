@@ -68,7 +68,12 @@ int _sleepEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.dream_log.length * 3;
+  {
+    final value = object.dream_log;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   {
     final value = object.location;
     if (value != null) {
@@ -100,12 +105,12 @@ Sleep _sleepDeserialize(
 ) {
   final object = Sleep();
   object.STILL_ASLEEP = reader.readBool(offsets[0]);
-  object.dream_log = reader.readString(offsets[1]);
+  object.dream_log = reader.readStringOrNull(offsets[1]);
   object.id = id;
   object.location = reader.readStringOrNull(offsets[2]);
   object.sleep_time = reader.readDateTime(offsets[3]);
   object.timestamp = reader.readDateTime(offsets[4]);
-  object.wake_time = reader.readDateTime(offsets[5]);
+  object.wake_time = reader.readDateTimeOrNull(offsets[5]);
   return object;
 }
 
@@ -119,7 +124,7 @@ P _sleepDeserializeProp<P>(
     case 0:
       return (reader.readBool(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
       return (reader.readStringOrNull(offset)) as P;
     case 3:
@@ -127,7 +132,7 @@ P _sleepDeserializeProp<P>(
     case 4:
       return (reader.readDateTime(offset)) as P;
     case 5:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -231,8 +236,24 @@ extension SleepQueryFilter on QueryBuilder<Sleep, Sleep, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Sleep, Sleep, QAfterFilterCondition> dream_logIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'dream_log',
+      ));
+    });
+  }
+
+  QueryBuilder<Sleep, Sleep, QAfterFilterCondition> dream_logIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'dream_log',
+      ));
+    });
+  }
+
   QueryBuilder<Sleep, Sleep, QAfterFilterCondition> dream_logEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -245,7 +266,7 @@ extension SleepQueryFilter on QueryBuilder<Sleep, Sleep, QFilterCondition> {
   }
 
   QueryBuilder<Sleep, Sleep, QAfterFilterCondition> dream_logGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -260,7 +281,7 @@ extension SleepQueryFilter on QueryBuilder<Sleep, Sleep, QFilterCondition> {
   }
 
   QueryBuilder<Sleep, Sleep, QAfterFilterCondition> dream_logLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -275,8 +296,8 @@ extension SleepQueryFilter on QueryBuilder<Sleep, Sleep, QFilterCondition> {
   }
 
   QueryBuilder<Sleep, Sleep, QAfterFilterCondition> dream_logBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -665,8 +686,24 @@ extension SleepQueryFilter on QueryBuilder<Sleep, Sleep, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Sleep, Sleep, QAfterFilterCondition> wake_timeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'wake_time',
+      ));
+    });
+  }
+
+  QueryBuilder<Sleep, Sleep, QAfterFilterCondition> wake_timeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'wake_time',
+      ));
+    });
+  }
+
   QueryBuilder<Sleep, Sleep, QAfterFilterCondition> wake_timeEqualTo(
-      DateTime value) {
+      DateTime? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'wake_time',
@@ -676,7 +713,7 @@ extension SleepQueryFilter on QueryBuilder<Sleep, Sleep, QFilterCondition> {
   }
 
   QueryBuilder<Sleep, Sleep, QAfterFilterCondition> wake_timeGreaterThan(
-    DateTime value, {
+    DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -689,7 +726,7 @@ extension SleepQueryFilter on QueryBuilder<Sleep, Sleep, QFilterCondition> {
   }
 
   QueryBuilder<Sleep, Sleep, QAfterFilterCondition> wake_timeLessThan(
-    DateTime value, {
+    DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -702,8 +739,8 @@ extension SleepQueryFilter on QueryBuilder<Sleep, Sleep, QFilterCondition> {
   }
 
   QueryBuilder<Sleep, Sleep, QAfterFilterCondition> wake_timeBetween(
-    DateTime lower,
-    DateTime upper, {
+    DateTime? lower,
+    DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -936,7 +973,7 @@ extension SleepQueryProperty on QueryBuilder<Sleep, Sleep, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Sleep, String, QQueryOperations> dream_logProperty() {
+  QueryBuilder<Sleep, String?, QQueryOperations> dream_logProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dream_log');
     });
@@ -960,7 +997,7 @@ extension SleepQueryProperty on QueryBuilder<Sleep, Sleep, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Sleep, DateTime, QQueryOperations> wake_timeProperty() {
+  QueryBuilder<Sleep, DateTime?, QQueryOperations> wake_timeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'wake_time');
     });

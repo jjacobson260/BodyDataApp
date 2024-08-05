@@ -27,13 +27,18 @@ const IngredientSchema = CollectionSchema(
       name: r'icon',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(
+    r'last_used': PropertySchema(
       id: 2,
+      name: r'last_used',
+      type: IsarType.dateTime,
+    ),
+    r'name': PropertySchema(
+      id: 3,
       name: r'name',
       type: IsarType.string,
     ),
     r'timestamp': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'timestamp',
       type: IsarType.dateTime,
     )
@@ -72,8 +77,9 @@ void _ingredientSerialize(
 ) {
   writer.writeString(offsets[0], object.category);
   writer.writeString(offsets[1], object.icon);
-  writer.writeString(offsets[2], object.name);
-  writer.writeDateTime(offsets[3], object.timestamp);
+  writer.writeDateTime(offsets[2], object.last_used);
+  writer.writeString(offsets[3], object.name);
+  writer.writeDateTime(offsets[4], object.timestamp);
 }
 
 Ingredient _ingredientDeserialize(
@@ -86,8 +92,9 @@ Ingredient _ingredientDeserialize(
   object.category = reader.readString(offsets[0]);
   object.icon = reader.readString(offsets[1]);
   object.id = id;
-  object.name = reader.readString(offsets[2]);
-  object.timestamp = reader.readDateTime(offsets[3]);
+  object.last_used = reader.readDateTime(offsets[2]);
+  object.name = reader.readString(offsets[3]);
+  object.timestamp = reader.readDateTime(offsets[4]);
   return object;
 }
 
@@ -103,8 +110,10 @@ P _ingredientDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -519,6 +528,60 @@ extension IngredientQueryFilter
     });
   }
 
+  QueryBuilder<Ingredient, Ingredient, QAfterFilterCondition> last_usedEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'last_used',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ingredient, Ingredient, QAfterFilterCondition>
+      last_usedGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'last_used',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ingredient, Ingredient, QAfterFilterCondition> last_usedLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'last_used',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ingredient, Ingredient, QAfterFilterCondition> last_usedBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'last_used',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Ingredient, Ingredient, QAfterFilterCondition> nameEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -736,6 +799,18 @@ extension IngredientQuerySortBy
     });
   }
 
+  QueryBuilder<Ingredient, Ingredient, QAfterSortBy> sortByLast_used() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'last_used', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ingredient, Ingredient, QAfterSortBy> sortByLast_usedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'last_used', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ingredient, Ingredient, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -799,6 +874,18 @@ extension IngredientQuerySortThenBy
     });
   }
 
+  QueryBuilder<Ingredient, Ingredient, QAfterSortBy> thenByLast_used() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'last_used', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ingredient, Ingredient, QAfterSortBy> thenByLast_usedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'last_used', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ingredient, Ingredient, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -840,6 +927,12 @@ extension IngredientQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Ingredient, Ingredient, QDistinct> distinctByLast_used() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'last_used');
+    });
+  }
+
   QueryBuilder<Ingredient, Ingredient, QDistinct> distinctByName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -871,6 +964,12 @@ extension IngredientQueryProperty
   QueryBuilder<Ingredient, String, QQueryOperations> iconProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'icon');
+    });
+  }
+
+  QueryBuilder<Ingredient, DateTime, QQueryOperations> last_usedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'last_used');
     });
   }
 

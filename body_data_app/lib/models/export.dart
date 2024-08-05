@@ -7,6 +7,6 @@ class Export {
   Id id = Isar.autoIncrement; // you can also use an integer id
 
   late DateTime timestamp;
-  late String data_stream;
-  late String export_type;
+  late String table;
+  late String type;
 }

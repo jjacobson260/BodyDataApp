@@ -3,6 +3,7 @@ import 'database_helper.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
+import 'models/sleep.dart';
 
 
 class SleepEntryDialog extends StatefulWidget {
@@ -66,7 +67,7 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
                   children: [
                     TextButton(
                       onPressed: () async {
-                        await dbHelper.deleteSleepData(latestEntry['id']);
+                        await dbHelper.deleteSleepData(latestEntry.id);
                         Navigator.of(context).pop();
                       },
                       child: Text('No Sleep'),
@@ -74,23 +75,23 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
                     TextButton(
                       onPressed: () async {
                         final now = DateTime.now();
-                        final wakeTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+                        final wakeTime = now;
                         // Parse existing sleep time
-                        final sleepTime = DateFormat('yyyy-MM-dd HH:mm:ss').parse(latestEntry['sleep_time']);
+                        var sleepTime = latestEntry.sleep_time;
                         // Add minutes to sleep time
                         final updatedSleepTime = sleepTime.add(Duration(minutes: _minutesToFallAsleep));
                         // Format updated sleep time to string
-                        final updatedSleepTimeStr = DateFormat('yyyy-MM-dd HH:mm:ss').format(updatedSleepTime);
+                        final updatedSleepTimeStr = updatedSleepTime;
 
-                        final latestId = latestEntry['id'];
-                        final sleepData = {
-                          'sleep_time': updatedSleepTimeStr,
-                          'wake_time': wakeTime,
-                          'dream_log': _dreamLogController.text,
-                          'STILL_ASLEEP': 0,
-                        };
-                        _logger.info('Updating: $latestId with data: $sleepData');
-                        await dbHelper.updateSleepData(latestId, sleepData);
+                        Sleep sleepData = Sleep();
+                        sleepData.id = latestEntry.id;
+                        sleepData.sleep_time = updatedSleepTimeStr;
+                        sleepData.wake_time = wakeTime;
+                        sleepData.dream_log = _dreamLogController.text;
+                        sleepData.STILL_ASLEEP = false;
+                        
+                        _logger.info('Updating: ${sleepData.id} with data: $sleepData');
+                        await dbHelper.updateSleepData(sleepData);
 
                         Navigator.of(context).pop();
                       },

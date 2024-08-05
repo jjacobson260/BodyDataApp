@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
 import 'date_time_picker_dialog.dart';
+import 'models/sleep.dart';
 
 class SleepLogDialog extends StatefulWidget {
   @override
@@ -14,14 +15,11 @@ class _SleepLogDialogState extends State<SleepLogDialog> {
   String _dreamLog = '';
 
   void _saveSleepData() async {
-    String startSleepTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_startSleepTime);
-    String endSleepTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_endSleepTime);
-    final sleepData = {
-      'timestamp': DateTime.now(),
-      'sleep_start': startSleepTimestamp,
-      'sleep_end': endSleepTimestamp,
-      'dream_log': _dreamLog,
-    };
+    Sleep sleepData = Sleep();
+    sleepData.timestamp = DateTime.now();
+    sleepData.sleep_time = _startSleepTime;
+    sleepData.wake_time = _endSleepTime;
+    sleepData.dream_log = _dreamLog;
     await DatabaseHelper().insertSleepData(sleepData);
     Navigator.of(context).pop();
   }

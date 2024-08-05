@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
 import 'date_time_picker_dialog.dart';
+import 'models/thought.dart';
 
 class ThoughtLogDialog extends StatefulWidget {
   @override
@@ -22,18 +23,17 @@ class _ThoughtLogDialogState extends State<ThoughtLogDialog> {
   }
 
   void _saveThoughtData() async {
-    String startThoughtTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_startThoughtTime);
-    String endThoughtTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_endThoughtTime);
+
     final length = calculateMinutesBetween(_startThoughtTime, _endThoughtTime);
-    final thoughtData = {
-      'timestamp': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
-      'start_time': startThoughtTimestamp,
-      'end_time': endThoughtTimestamp,
-      'length': length,
-      'depth': _depth,
-      'thought_log': _thoughtLog,
-      'STILL_THINKING': 0
-    };
+    Thought thoughtData = Thought();
+    thoughtData.timestamp = DateTime.now();
+    thoughtData.start_time = _startThoughtTime;
+    thoughtData.end_time = _endThoughtTime;
+    thoughtData.length = length;
+    thoughtData.depth = _depth;
+    thoughtData.thought_log = _thoughtLog;
+    thoughtData.STILL_THINKING = false;
+
     await DatabaseHelper().insertThoughtData(thoughtData);
     Navigator.of(context).pop();
   }

@@ -12,5 +12,6 @@ class Thought {
   late DateTime? end_time;
   late int? length;
   late int? depth;
+  late String? location;
   late bool STILL_THINKING;
 }

@@ -18,8 +18,8 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
   }
 
   Future<void> _fetchThoughtLogs() async {
-    final db = await DatabaseHelper().database;
-    final List<Map<String, dynamic>> logs = await db.query('thought_data');
+    final db = DatabaseHelper();
+    final List<Map<String, dynamic>> logs = await db.getThoughtDataAsMap();
     setState(() {
       _thoughtLogs = logs;
     });
@@ -38,8 +38,8 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
   }
 
   void _deleteThoughtLog(int id) async {
-    final db = await DatabaseHelper().database;
-    await db.delete('thought_data', where: 'id = ?', whereArgs: [id]);
+    final db = DatabaseHelper();
+    await db.deleteThoughtData(id);
     _fetchThoughtLogs();
   }
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:isar/isar.dart';
 import 'database_helper.dart';
 import 'date_time_picker_dialog.dart'; 
+import 'models/medicine.dart';
 
 class MedicineEntryDialog extends StatefulWidget {
   final bool isEditMode;
@@ -17,7 +19,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
   final _formKey = GlobalKey<FormState>();
   late String _selectedMedicineName = '';
   String _newMedicineName = '';
-  late String _dosage = '';
+  late double _dosage = 0.0;
   late String _selectedUnit = '';
   String _newUnit = '';
   List<String> _medicineNames = [];
@@ -53,9 +55,9 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
   }
 
   Future<void> _fetchMedicineDetails(String medicineName) async {
-    Map<String, String?> details = await DatabaseHelper().getMedicineDetails(medicineName);
+    Map<String, dynamic> details = await DatabaseHelper().getMedicineDetails(medicineName);
     setState(() {
-      _dosage = details['dosage'] ?? '';
+      _dosage = details['dosage'] ?? 0.0;
       _selectedUnit = details['unit'] ?? '';
     });
   }
@@ -66,17 +68,19 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
 
       String medicineName = _selectedMedicineName == 'New Medicine' ? _newMedicineName : _selectedMedicineName;
       String unit = _selectedUnit == 'New Unit' ? _newUnit : _selectedUnit;
-      String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
+      DateTime timestamp = _selectedDateTime;
 
-      Map<String, dynamic> data = {
-        'timestamp': timestamp,
-        'medicine_name': medicineName,
-        'dosage': _dosage,
-        'unit': unit,
-      };
+      Medicine data = Medicine();
+      
+      data.timestamp = timestamp;
+      data.name = medicineName;
+      data.dosage = _dosage;
+      data.unit = unit;
 
       if (widget.isEditMode && widget.initialData != null) {
-        await DatabaseHelper().updateMedicineData(widget.initialData!['id'], data);
+        // this will always have a value here
+        data.id = widget.initialData!['id']; 
+        await DatabaseHelper().updateMedicineData(data);
       } else {
         await DatabaseHelper().insertMedicineData(data);
       }
@@ -133,7 +137,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                     if (_selectedMedicineName != 'New Medicine') {
                       _fetchMedicineDetails(_selectedMedicineName);
                     } else {
-                      _dosage = '';
+                      _dosage = 0.0;
                       _selectedUnit = '';
                     }
                   });
@@ -160,7 +164,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                 ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Dosage'),
-                initialValue: _dosage,
+                initialValue: _dosage.toString(),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the dosage';
@@ -168,10 +172,10 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                   return null;
                 },
                 onChanged: (value) {
-                  _dosage = value;
+                  _dosage = double.parse(value);
                 },
                 onSaved: (value) {
-                  _dosage = value!;
+                  _dosage = double.parse(value!);
                 },
               ),
               DropdownButtonFormField<String>(

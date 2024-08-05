@@ -6,6 +6,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'database_helper.dart';
 import 'full_screen_image_page.dart';
+import 'models/food.dart';
 
 class FoodDataPage extends StatefulWidget {
   @override
@@ -21,10 +22,25 @@ class _FoodDataPageState extends State<FoodDataPage> {
     _fetchFoodData();
   }
 
+  Map<String, dynamic> convertFoodToMap(Food food) {
+    final map = {
+      'id': food.id,
+      'description': food.description,
+      'image_path': food.image_path,
+      'ingredients_json': food.ingredients_json,
+      'recipe_id': food.recipe_id,
+      'location': food.location
+    };
+    return map;
+  }
+
   Future<void> _fetchFoodData() async {
-    List<Map<String, dynamic>> data = await DatabaseHelper().getFoodData();
+    List<Food> data = await DatabaseHelper().getFoodData();
+    final data_map = data.map((object) {
+      return convertFoodToMap(object);
+    }).toList();
     setState(() {
-      _foodData = data;
+      _foodData = data_map;
     });
   }
 

@@ -1,3 +1,4 @@
+import 'package:body_data_app/models/poop.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
@@ -37,16 +38,15 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
   }
 
   void _saveData() async {
-    String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDateTime);
-    final data = {
-      'timestamp': timestamp,
-      'bristol_rating': _bristolRating,
-      'urgency': _urgency,
-      'blood': _blood ? 1 : 0,
-    };
+    final data = Poop();
+    data.timestamp = _selectedDateTime;
+    data.bristolRating = _bristolRating;
+    data.urgency = _urgency;
+    data.blood = _blood ? true : false;
 
     if (widget.isEditMode && widget.initialData != null) {
-      await DatabaseHelper().updatePoopData(widget.initialData!['id'], data);
+      data.id = widget.initialData!['id'];
+      await DatabaseHelper().updatePoopData(data);
     } else {
       await DatabaseHelper().insertPoopData(data);
     }

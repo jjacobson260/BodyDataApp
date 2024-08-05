@@ -37,18 +37,23 @@ const ThoughtSchema = CollectionSchema(
       name: r'length',
       type: IsarType.long,
     ),
-    r'start_time': PropertySchema(
+    r'location': PropertySchema(
       id: 4,
+      name: r'location',
+      type: IsarType.string,
+    ),
+    r'start_time': PropertySchema(
+      id: 5,
       name: r'start_time',
       type: IsarType.dateTime,
     ),
     r'thought_log': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'thought_log',
       type: IsarType.string,
     ),
     r'timestamp': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'timestamp',
       type: IsarType.dateTime,
     )
@@ -73,6 +78,12 @@ int _thoughtEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.location;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.thought_log.length * 3;
   return bytesCount;
 }
@@ -87,9 +98,10 @@ void _thoughtSerialize(
   writer.writeLong(offsets[1], object.depth);
   writer.writeDateTime(offsets[2], object.end_time);
   writer.writeLong(offsets[3], object.length);
-  writer.writeDateTime(offsets[4], object.start_time);
-  writer.writeString(offsets[5], object.thought_log);
-  writer.writeDateTime(offsets[6], object.timestamp);
+  writer.writeString(offsets[4], object.location);
+  writer.writeDateTime(offsets[5], object.start_time);
+  writer.writeString(offsets[6], object.thought_log);
+  writer.writeDateTime(offsets[7], object.timestamp);
 }
 
 Thought _thoughtDeserialize(
@@ -104,9 +116,10 @@ Thought _thoughtDeserialize(
   object.end_time = reader.readDateTimeOrNull(offsets[2]);
   object.id = id;
   object.length = reader.readLongOrNull(offsets[3]);
-  object.start_time = reader.readDateTimeOrNull(offsets[4]);
-  object.thought_log = reader.readString(offsets[5]);
-  object.timestamp = reader.readDateTime(offsets[6]);
+  object.location = reader.readStringOrNull(offsets[4]);
+  object.start_time = reader.readDateTimeOrNull(offsets[5]);
+  object.thought_log = reader.readString(offsets[6]);
+  object.timestamp = reader.readDateTime(offsets[7]);
   return object;
 }
 
@@ -126,10 +139,12 @@ P _thoughtDeserializeProp<P>(
     case 3:
       return (reader.readLongOrNull(offset)) as P;
     case 4:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -494,6 +509,152 @@ extension ThoughtQueryFilter
     });
   }
 
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'location',
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'location',
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'location',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'location',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'location',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterFilterCondition> locationIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'location',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Thought, Thought, QAfterFilterCondition> start_timeIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -803,6 +964,18 @@ extension ThoughtQuerySortBy on QueryBuilder<Thought, Thought, QSortBy> {
     });
   }
 
+  QueryBuilder<Thought, Thought, QAfterSortBy> sortByLocation() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'location', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterSortBy> sortByLocationDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'location', Sort.desc);
+    });
+  }
+
   QueryBuilder<Thought, Thought, QAfterSortBy> sortByStart_time() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'start_time', Sort.asc);
@@ -902,6 +1075,18 @@ extension ThoughtQuerySortThenBy
     });
   }
 
+  QueryBuilder<Thought, Thought, QAfterSortBy> thenByLocation() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'location', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Thought, Thought, QAfterSortBy> thenByLocationDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'location', Sort.desc);
+    });
+  }
+
   QueryBuilder<Thought, Thought, QAfterSortBy> thenByStart_time() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'start_time', Sort.asc);
@@ -965,6 +1150,13 @@ extension ThoughtQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Thought, Thought, QDistinct> distinctByLocation(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'location', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Thought, Thought, QDistinct> distinctByStart_time() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'start_time');
@@ -1014,6 +1206,12 @@ extension ThoughtQueryProperty
   QueryBuilder<Thought, int?, QQueryOperations> lengthProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'length');
+    });
+  }
+
+  QueryBuilder<Thought, String?, QQueryOperations> locationProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'location');
     });
   }
 

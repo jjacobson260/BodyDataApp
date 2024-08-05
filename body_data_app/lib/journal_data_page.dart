@@ -6,6 +6,8 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'database_helper.dart';
 import 'full_screen_image_page.dart';
+import 'models/journal.dart';
+import 'package:intl/intl.dart';
 
 class JournalDataPage extends StatefulWidget {
   @override
@@ -13,7 +15,7 @@ class JournalDataPage extends StatefulWidget {
 }
 
 class _JournalDataPageState extends State<JournalDataPage> {
-  List<Map<String, dynamic>> _journalData = [];
+  List<Journal> _journalData = [];
 
   @override
   void initState() {
@@ -22,7 +24,7 @@ class _JournalDataPageState extends State<JournalDataPage> {
   }
 
   Future<void> _fetchJournalData() async {
-    List<Map<String, dynamic>> data = await DatabaseHelper().getJournalData();
+    List<Journal> data = await DatabaseHelper().getJournalData();
     setState(() {
       _journalData = data;
     });
@@ -47,15 +49,16 @@ class _JournalDataPageState extends State<JournalDataPage> {
         itemCount: _journalData.length,
         itemBuilder: (context, index) {
           final item = _journalData[index];
+          final image_path = item.image_path ?? '';
           return Card(
             child: ListTile(
-              title: Text(item['timestamp']),
-              subtitle: Text(item['entry']),
-              trailing: item['image_path'] != null
+              title: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(item.timestamp)),
+              subtitle: Text(item.entry),
+              trailing: item.image_path != null
                   ? GestureDetector(
-                      onTap: () => _showFullScreenImage(context, item['image_path']),
+                      onTap: () => _showFullScreenImage(context, image_path),
                       child: Image.file(
-                        File(item['image_path']),
+                        File(image_path),
                         height: 50,
                         width: 50,
                       ),

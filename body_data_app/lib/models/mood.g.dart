@@ -25,7 +25,7 @@ const MoodSchema = CollectionSchema(
     r'moods_json': PropertySchema(
       id: 1,
       name: r'moods_json',
-      type: IsarType.long,
+      type: IsarType.string,
     ),
     r'note': PropertySchema(
       id: 2,
@@ -69,6 +69,7 @@ int _moodEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.moods_json.length * 3;
   bytesCount += 3 + object.note.length * 3;
   return bytesCount;
 }
@@ -80,7 +81,7 @@ void _moodSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.location);
-  writer.writeLong(offsets[1], object.moods_json);
+  writer.writeString(offsets[1], object.moods_json);
   writer.writeString(offsets[2], object.note);
   writer.writeLong(offsets[3], object.rating);
   writer.writeDateTime(offsets[4], object.timestamp);
@@ -95,7 +96,7 @@ Mood _moodDeserialize(
   final object = Mood();
   object.id = id;
   object.location = reader.readStringOrNull(offsets[0]);
-  object.moods_json = reader.readLong(offsets[1]);
+  object.moods_json = reader.readString(offsets[1]);
   object.note = reader.readString(offsets[2]);
   object.rating = reader.readLong(offsets[3]);
   object.timestamp = reader.readDateTime(offsets[4]);
@@ -112,7 +113,7 @@ P _moodDeserializeProp<P>(
     case 0:
       return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
@@ -409,46 +410,55 @@ extension MoodQueryFilter on QueryBuilder<Mood, Mood, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonEqualTo(int value) {
+  QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'moods_json',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonGreaterThan(
-    int value, {
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'moods_json',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonLessThan(
-    int value, {
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'moods_json',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonBetween(
-    int lower,
-    int upper, {
+    String lower,
+    String upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -457,6 +467,75 @@ extension MoodQueryFilter on QueryBuilder<Mood, Mood, QFilterCondition> {
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'moods_json',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'moods_json',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'moods_json',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'moods_json',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'moods_json',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Mood, Mood, QAfterFilterCondition> moods_jsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'moods_json',
+        value: '',
       ));
     });
   }
@@ -843,9 +922,10 @@ extension MoodQueryWhereDistinct on QueryBuilder<Mood, Mood, QDistinct> {
     });
   }
 
-  QueryBuilder<Mood, Mood, QDistinct> distinctByMoods_json() {
+  QueryBuilder<Mood, Mood, QDistinct> distinctByMoods_json(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'moods_json');
+      return query.addDistinctBy(r'moods_json', caseSensitive: caseSensitive);
     });
   }
 
@@ -882,7 +962,7 @@ extension MoodQueryProperty on QueryBuilder<Mood, Mood, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Mood, int, QQueryOperations> moods_jsonProperty() {
+  QueryBuilder<Mood, String, QQueryOperations> moods_jsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'moods_json');
     });

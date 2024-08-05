@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'ingredient_info.dart';
+import 'models/ingredient.dart';
 
 class IngredientWidget extends StatelessWidget {
   final Ingredient ingredient;

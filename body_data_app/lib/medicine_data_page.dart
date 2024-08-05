@@ -17,7 +17,7 @@ class MedicineDataPageState extends State<MedicineDataPage> {
   }
 
   Future<void> _retrieveRecords() async {
-    List<Map<String, dynamic>> data = await DatabaseHelper().getMedicineData();
+    List<Map<String, dynamic>> data = await DatabaseHelper().getMedicineDataAsMap();
     setState(() {
       records = data;
     });

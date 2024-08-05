@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
 import 'image_selector_widget.dart';
+import 'models/journal.dart';
 
 
 class JournalEntryDialog extends StatefulWidget {
@@ -19,13 +20,12 @@ class _JournalEntryDialogState extends State<JournalEntryDialog> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+      final timestamp = DateTime.now();
 
-      Map<String, dynamic> journalData = {
-        'timestamp': timestamp,
-        'entry': _entry,
-        'image_path': _image?.path,
-      };
+      Journal journalData = Journal();
+      journalData.timestamp = timestamp;
+      journalData.entry = _entry;
+      journalData.image_path = _image?.path;
 
       await DatabaseHelper().insertJournalData(journalData);
 

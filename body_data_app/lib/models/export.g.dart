@@ -17,20 +17,20 @@ const ExportSchema = CollectionSchema(
   name: r'Export',
   id: 5377953304456643507,
   properties: {
-    r'data_stream': PropertySchema(
+    r'table': PropertySchema(
       id: 0,
-      name: r'data_stream',
-      type: IsarType.string,
-    ),
-    r'export_type': PropertySchema(
-      id: 1,
-      name: r'export_type',
+      name: r'table',
       type: IsarType.string,
     ),
     r'timestamp': PropertySchema(
-      id: 2,
+      id: 1,
       name: r'timestamp',
       type: IsarType.dateTime,
+    ),
+    r'type': PropertySchema(
+      id: 2,
+      name: r'type',
+      type: IsarType.string,
     )
   },
   estimateSize: _exportEstimateSize,
@@ -53,8 +53,8 @@ int _exportEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.data_stream.length * 3;
-  bytesCount += 3 + object.export_type.length * 3;
+  bytesCount += 3 + object.table.length * 3;
+  bytesCount += 3 + object.type.length * 3;
   return bytesCount;
 }
 
@@ -64,9 +64,9 @@ void _exportSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.data_stream);
-  writer.writeString(offsets[1], object.export_type);
-  writer.writeDateTime(offsets[2], object.timestamp);
+  writer.writeString(offsets[0], object.table);
+  writer.writeDateTime(offsets[1], object.timestamp);
+  writer.writeString(offsets[2], object.type);
 }
 
 Export _exportDeserialize(
@@ -76,10 +76,10 @@ Export _exportDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Export();
-  object.data_stream = reader.readString(offsets[0]);
-  object.export_type = reader.readString(offsets[1]);
   object.id = id;
-  object.timestamp = reader.readDateTime(offsets[2]);
+  object.table = reader.readString(offsets[0]);
+  object.timestamp = reader.readDateTime(offsets[1]);
+  object.type = reader.readString(offsets[2]);
   return object;
 }
 
@@ -93,9 +93,9 @@ P _exportDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
-    case 2:
       return (reader.readDateTime(offset)) as P;
+    case 2:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -189,266 +189,6 @@ extension ExportQueryWhere on QueryBuilder<Export, Export, QWhereClause> {
 }
 
 extension ExportQueryFilter on QueryBuilder<Export, Export, QFilterCondition> {
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'data_stream',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'data_stream',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'data_stream',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'data_stream',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'data_stream',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'data_stream',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'data_stream',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'data_stream',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'data_stream',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> data_streamIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'data_stream',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'export_type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'export_type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'export_type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'export_type',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'export_type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'export_type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'export_type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'export_type',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'export_type',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterFilterCondition> export_typeIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'export_type',
-        value: '',
-      ));
-    });
-  }
-
   QueryBuilder<Export, Export, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -497,6 +237,136 @@ extension ExportQueryFilter on QueryBuilder<Export, Export, QFilterCondition> {
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'table',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'table',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'table',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'table',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'table',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'table',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'table',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'table',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'table',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> tableIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'table',
+        value: '',
       ));
     });
   }
@@ -553,6 +423,135 @@ extension ExportQueryFilter on QueryBuilder<Export, Export, QFilterCondition> {
       ));
     });
   }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'type',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'type',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'type',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterFilterCondition> typeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'type',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension ExportQueryObject on QueryBuilder<Export, Export, QFilterCondition> {}
@@ -560,27 +559,15 @@ extension ExportQueryObject on QueryBuilder<Export, Export, QFilterCondition> {}
 extension ExportQueryLinks on QueryBuilder<Export, Export, QFilterCondition> {}
 
 extension ExportQuerySortBy on QueryBuilder<Export, Export, QSortBy> {
-  QueryBuilder<Export, Export, QAfterSortBy> sortByData_stream() {
+  QueryBuilder<Export, Export, QAfterSortBy> sortByTable() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'data_stream', Sort.asc);
+      return query.addSortBy(r'table', Sort.asc);
     });
   }
 
-  QueryBuilder<Export, Export, QAfterSortBy> sortByData_streamDesc() {
+  QueryBuilder<Export, Export, QAfterSortBy> sortByTableDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'data_stream', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterSortBy> sortByExport_type() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'export_type', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterSortBy> sortByExport_typeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'export_type', Sort.desc);
+      return query.addSortBy(r'table', Sort.desc);
     });
   }
 
@@ -595,33 +582,21 @@ extension ExportQuerySortBy on QueryBuilder<Export, Export, QSortBy> {
       return query.addSortBy(r'timestamp', Sort.desc);
     });
   }
+
+  QueryBuilder<Export, Export, QAfterSortBy> sortByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterSortBy> sortByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
 }
 
 extension ExportQuerySortThenBy on QueryBuilder<Export, Export, QSortThenBy> {
-  QueryBuilder<Export, Export, QAfterSortBy> thenByData_stream() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'data_stream', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterSortBy> thenByData_streamDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'data_stream', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterSortBy> thenByExport_type() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'export_type', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Export, Export, QAfterSortBy> thenByExport_typeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'export_type', Sort.desc);
-    });
-  }
-
   QueryBuilder<Export, Export, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -631,6 +606,18 @@ extension ExportQuerySortThenBy on QueryBuilder<Export, Export, QSortThenBy> {
   QueryBuilder<Export, Export, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterSortBy> thenByTable() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'table', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Export, Export, QAfterSortBy> thenByTableDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'table', Sort.desc);
     });
   }
 
@@ -645,26 +632,38 @@ extension ExportQuerySortThenBy on QueryBuilder<Export, Export, QSortThenBy> {
       return query.addSortBy(r'timestamp', Sort.desc);
     });
   }
-}
 
-extension ExportQueryWhereDistinct on QueryBuilder<Export, Export, QDistinct> {
-  QueryBuilder<Export, Export, QDistinct> distinctByData_stream(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Export, Export, QAfterSortBy> thenByType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'data_stream', caseSensitive: caseSensitive);
+      return query.addSortBy(r'type', Sort.asc);
     });
   }
 
-  QueryBuilder<Export, Export, QDistinct> distinctByExport_type(
+  QueryBuilder<Export, Export, QAfterSortBy> thenByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
+}
+
+extension ExportQueryWhereDistinct on QueryBuilder<Export, Export, QDistinct> {
+  QueryBuilder<Export, Export, QDistinct> distinctByTable(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'export_type', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'table', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<Export, Export, QDistinct> distinctByTimestamp() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'timestamp');
+    });
+  }
+
+  QueryBuilder<Export, Export, QDistinct> distinctByType(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'type', caseSensitive: caseSensitive);
     });
   }
 }
@@ -676,21 +675,21 @@ extension ExportQueryProperty on QueryBuilder<Export, Export, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Export, String, QQueryOperations> data_streamProperty() {
+  QueryBuilder<Export, String, QQueryOperations> tableProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'data_stream');
-    });
-  }
-
-  QueryBuilder<Export, String, QQueryOperations> export_typeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'export_type');
+      return query.addPropertyName(r'table');
     });
   }
 
   QueryBuilder<Export, DateTime, QQueryOperations> timestampProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'timestamp');
+    });
+  }
+
+  QueryBuilder<Export, String, QQueryOperations> typeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'type');
     });
   }
 }

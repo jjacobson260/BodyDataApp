@@ -8,7 +8,7 @@ class Mood {
 
   late DateTime timestamp;
   late int rating;
-  late int moods_json;
+  late String moods_json;
   late String note;
   late String? location;
 }

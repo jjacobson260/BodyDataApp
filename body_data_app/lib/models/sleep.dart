@@ -8,8 +8,8 @@ class Sleep {
 
   late DateTime timestamp;
   late DateTime sleep_time;
-  late DateTime wake_time;
-  late String dream_log;
+  late DateTime? wake_time;
+  late String? dream_log;
   late String? location;
   late bool STILL_ASLEEP;
 }

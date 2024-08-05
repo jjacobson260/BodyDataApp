@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
+import 'models/ingredient.dart';
 
 class IngredientInfo {
   final String name;
@@ -11,10 +12,16 @@ class IngredientInfo {
   IngredientInfo({required this.name, required this.category, required this.icon });
 
   Future<void> insertIngredientInfos(List<IngredientInfo> ingredients) async {
-  final db = await DatabaseHelper().database;
+  final db = DatabaseHelper();
 
   for (var ingredient in ingredients) {
-    DatabaseHelper().insertIngredient(ingredient);
+    Ingredient i = Ingredient();
+    i.timestamp = DateTime.now();
+    i.category = ingredient.category;
+    i.icon = ingredient.icon;
+    i.name = ingredient.name;
+    i.last_used = DateTime.now();
+    DatabaseHelper().insertIngredient(i);
   }
 }
 }

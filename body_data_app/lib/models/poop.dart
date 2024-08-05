@@ -10,6 +10,6 @@ class Poop {
   late int bristolRating;
   late int urgency;
   late bool blood;
-  late String? image_path;
+  late String? imagePath;
   late String? location;
 }
