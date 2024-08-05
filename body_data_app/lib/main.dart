@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -15,11 +14,9 @@ import 'sleep_data_page.dart';
 import 'mood_data_page.dart';
 import 'thought_data_page.dart';
 import 'database_helper.dart';
-import 'drift_database.dart';
 import 'dart:io';
 
 
-late final AppDatabase appDatabase;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +34,6 @@ void main() async {
     databaseFactory = databaseFactory; // This is just to emphasize we're using the default factory for mobile
   }
 
-  appDatabase = await AppDatabase();
   _setupLogging();
   // Run your Flutter app
   runApp(MyApp());

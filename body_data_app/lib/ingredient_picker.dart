@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'ingredient.dart';
+import 'ingredient_info.dart';
 import 'ingredient_widget.dart';
 import 'database_helper.dart';
 

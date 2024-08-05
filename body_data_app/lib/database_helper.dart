@@ -1,9 +1,21 @@
-import 'package:sqflite/sqflite.dart';
+import 'dart:ffi';
+
+import 'package:body_data_app/models/medicine.dart';
+import 'package:isar/isar.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:logging/logging.dart';
 import 'package:intl/intl.dart';
-import 'ingredient.dart';
+import 'ingredient_info.dart';
+import 'models/poop.dart';
+import 'models/medicine.dart';
+import 'models/food.dart';
+import 'models/mood.dart';
+import 'models/journal.dart';
+import 'models/thought.dart';
+import 'models/sleep.dart';
+import 'models/ingredient.dart';
+import 'models/recipe.dart';
 
 
 class DatabaseHelper {
@@ -11,262 +23,135 @@ class DatabaseHelper {
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
 
-  static Database? _database;
+  late final Isar db;
+  
 
   // Create a logger instance for the DatabaseHelper class
   final Logger _logger = Logger('DatabaseHelper');
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
-  }
-
-  Future<Database> _initDatabase() async {
-    var documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'body_data.db');
-
-    _logger.info('Opening database at path: $path');
-
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        _logger.info('Creating database tables');
-
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS poop_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            bristol_rating INTEGER,
-            urgency INTEGER,
-            blood BOOLEAN
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS medicine_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            medicine_name TEXT,
-            dosage TEXT,
-            unit TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS food_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            description TEXT,
-            image_path TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS mood_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            rating INTEGER,
-            moods TEXT,
-            note TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS journal_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            entry TEXT,
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS export_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            export_type TEXT,
-            last_export TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS sleep_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            sleep_time TEXT,
-            wake_time TEXT,
-            dream_log TEXT,
-            STILL_ASLEEP INTEGER
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS thought_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            start_time TEXT,
-            end_time TEXT,
-            length INTEGER,
-            depth INTEGER,
-            thought_log TEXT,
-            STILL_THINKING INT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS ingredients (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            created_at TEXT,
-            last_used TEXT,
-            name TEXT,
-            category TEXT,
-            icon TEXT
-          )
-        ''');
-      },
-    );
-  }
-
-  Future<int> insertPoopData(Map<String, dynamic> data) async {
-    final db = await database;
-    int id = await db.insert('poop_data', data);
+  Future<int> insertPoopData(Poop data) async {
+    late int id;
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([PoopSchema], directory: directory.path);
+    db.writeTxn(() async {
+      id = await db.poops.put(data); // insert & update
+    });
     _logger.info('Inserted poop data with id: $id');
     return id;
   }
 
-  Future<int> updatePoopData(int id, Map<String, dynamic> newData) async {
-    final db = await database;
-    _logger.info('Updating poop data with id: $id with newData: $newData');
-    return await db.update(
-      'poop_data',
-      newData,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  Future<Null> updatePoopData(Poop data) async {
+
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([PoopSchema], directory: directory.path);
+    db.writeTxn(() async {
+      await db.poops.put(data); // insert & update
+    });
+    _logger.info('Updated poop data with id: ${data.id}');
   }
 
-  Future<int> deletePoopData(int id) async {
-    final db = await database;
+  Future<bool> deletePoopData(int id) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([PoopSchema], directory: directory.path);
     _logger.info('Deleting poop data with id: $id');
-    return await db.delete(
-      'poop_data',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final success = await db.poops.delete(id);
+    return success;
   }
 
-  Future<List<Map<String, dynamic>>> getPoopData() async {
-    final db = await database;
+  Future<List<Poop>> getPoopData() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([PoopSchema], directory: directory.path);
+    final poopDataList = await db.poops.where().findAll();
     _logger.info('Querying all poop data');
-    return await db.query('poop_data');
+    return poopDataList;
   }
 
   Future<double> getAverageBristolRatingForDays(int days) async {
-    final db = await database;
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([PoopSchema], directory: directory.path);
     final now = DateTime.now();
     final pastDate = now.subtract(Duration(days: days));
-    final pastDateStr = pastDate.toIso8601String();
-
-    final result = await db.rawQuery(
-      'SELECT AVG(bristol_rating) as avg_rating FROM poop_data WHERE timestamp >= ?',
-      [pastDateStr],
-    );
+    // get average rating
+    final result = await db.poops.where().filter().timestampGreaterThan(pastDate).bristolRatingProperty().average();
     _logger.info('Got average bristol rating of: $result');
-    if (result.isNotEmpty && result.first['avg_rating'] != null) {
-      return result.first['avg_rating'] as double;
-    } else {
-      return 0.0;
-    }
+    return result;
   }
 
   Future<double> getAverageUrgencyForDays(int days) async {
-    final db = await database;
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([PoopSchema], directory: directory.path);
     final now = DateTime.now();
     final pastDate = now.subtract(Duration(days: days));
-    final pastDateStr = pastDate.toIso8601String();
-
-    final result = await db.rawQuery(
-      'SELECT AVG(urgency) as avg_urgency FROM poop_data WHERE timestamp >= ?',
-      [pastDateStr],
-    );
+    // get average rating
+    final result = await db.poops.where().filter().timestampGreaterThan(pastDate).urgencyProperty().average();
     _logger.info('Got average urgency of: $result');
-    if (result.isNotEmpty && result.first['avg_urgency'] != null) {
-      return result.first['avg_urgency'] as double;
-    } else {
-      return 0.0;
-    }
+    return result;
   }
 
   Future<int> getBMCountForDays(int days) async {
-    final db = await database;
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([PoopSchema], directory: directory.path);
     final now = DateTime.now();
     final pastDate = now.subtract(Duration(days: days));
-    final pastDateStr = pastDate.toIso8601String();
 
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM poop_data WHERE timestamp >= ?',
-      [pastDateStr],
-    );
+    final result = await db.poops.where().filter().timestampGreaterThan(pastDate).count();
     _logger.info('Got BM count of: $result');
-    if (result.isNotEmpty && result.first['count'] != null) {
-      return result.first['count'] as int;
-    } else {
-      return 0;
-    }
+    return result;
   }
 
-  Future<int> insertMedicineData(Map<String, dynamic> data) async {
-    final db = await database;
-    int id = await db.insert('medicine_data', data);
+  Future<int> insertMedicineData(Medicine data) async {
+    late int id;
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MedicineSchema], directory: directory.path);
+    db.writeTxn(() async {
+      id = await db.medicines.put(data); // insert & update
+    });
     _logger.info('Inserted medicine data with id: $id');
     return id;
   }
 
-  Future<int> updateMedicineData(int id, Map<String, dynamic> newData) async {
-    final db = await database;
-    _logger.info('Updating medicine data with id: $id with newData: $newData');
-    return await db.update(
-      'medicine_data',
-      newData,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  Future<void> updateMedicineData(Medicine data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MedicineSchema], directory: directory.path);
+    db.writeTxn(() async {
+      await db.medicines.put(data); // insert & update
+    });
+    _logger.info('Updated medicine data with id: ${data.id} with data: $data');
   }
 
-  Future<int> deleteMedicineData(int id) async {
-    final db = await database;
+  Future<List<Medicine>> getMedicineData() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MedicineSchema], directory: directory.path);
+    final medicineDataList = await db.medicines.where().findAll();
+    _logger.info('Querying all medicine data');
+    return medicineDataList;
+  }
+
+  Future<bool> deleteMedicineData(int id) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MedicineSchema], directory: directory.path);
     _logger.info('Deleting medicine data with id: $id');
-    return await db.delete(
-      'medicine_data',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final success = await db.medicines.delete(id);
+    return success;
   }
 
-  Future<Map<String, String?>> getMedicineDetails(String medicineName) async {
-    final db = await database;
+  Future<Map<String, dynamic>> getMedicineDetails(String medicineName) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MedicineSchema], directory: directory.path);
     _logger.info('Querying medicine details for: $medicineName');
-    
-    List<Map<String, dynamic>> result = await db.query(
-      'medicine_data',
-      columns: ['dosage', 'unit'],
-      where: 'medicine_name = ?',
-      whereArgs: [medicineName],
-      orderBy: 'timestamp ASC',
-      limit: 1,
-    );
+    // this should only return 1
+    final result_list = await db.medicines.where().nameEqualTo(medicineName).findAll();
+    final result = result_list[0];
 
-    if (result.isNotEmpty) {
-      _logger.info('Found medicine details for: $medicineName');
-      return {
-        'dosage': result.first['dosage'] as String?,
-        'unit': result.first['unit'] as String?,
-      };
-    } else {
-      _logger.info('No medicine details found for: $medicineName');
-    }
-
-    return {'dosage': null, 'unit': null};
+    return {'dosage': result.dosage, 'unit': result.unit};
   }
 
   Future<List<String>> getMedicineUnits() async {
-    final db = await database;
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MedicineSchema], directory: directory.path);
     _logger.info('Querying distinct medicine units');
-
-    var result = await db.rawQuery('SELECT DISTINCT unit FROM medicine_data');
-    List<String> medicineUnits = result.map((e) => e['unit'] as String).toList();
+    final result = await db.medicines.where().distinctByUnit().findAll();
+    List<String> medicineUnits = result.map((e) => e.unit as String).toList();
 
     _logger.info('Found ${medicineUnits.length} distinct medicine units');
 
@@ -275,309 +160,360 @@ class DatabaseHelper {
 
   
 
-  Future<List<Map<String, dynamic>>> getMedicineData() async {
-    final db = await database;
-    _logger.info('Querying all medicine data');
-    return await db.query('medicine_data', orderBy: 'timestamp DESC');
-  }
+  
 
   Future<List<String>> getMedicineNames() async {
-    final db = await database;
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MedicineSchema], directory: directory.path);
     _logger.info('Querying distinct medicine names');
-
-    var result = await db.rawQuery('SELECT DISTINCT medicine_name FROM medicine_data');
-    List<String> medicineNames = result.map((e) => e['medicine_name'] as String).toList();
+    var result = await db.medicines.where().distinctByName().findAll();
+    List<String> medicineNames = result.map((e) => e.name as String).toList();
 
     _logger.info('Found ${medicineNames.length} distinct medicine names');
 
     return medicineNames;
   }
 
-  Future<void> insertFoodData(Map<String, dynamic> foodData) async {
-    final db = await database;
-    await db.insert('food_data', foodData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted food data');
+  Future<void> insertFoodData(Food data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([FoodSchema], directory: directory.path);
+    var id;
+    db.writeTxn(() async {
+      id = await db.foods.put(data); // insert & update
+    });
+    _logger.info('Inserted medicine data with id: $id');
+    return id;
   }
 
-  Future<List<Map<String, dynamic>>> getFoodData() async {
-    final db = await database;
+  Future<void> updateFoodData(Food data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([FoodSchema], directory: directory.path);
+    var id;
+    db.writeTxn(() async {
+      await db.foods.put(data); // insert & update
+    });
+    _logger.info('Inserted food data with id: ${data.id}');
+  }
+
+  Future<List<Food>> getFoodData() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([FoodSchema], directory: directory.path);
     _logger.info('Querying all food data');
-    return await db.query('food_data', orderBy: 'timestamp DESC');
+    final foodDataList = await db.foods.where().findAll();
+
+    return foodDataList;
   }
 
-  Future<void> insertMoodData(Map<String, dynamic> moodData) async {
-    final db = await database;
-    _logger.info('Initializing database');
-    await _initDatabase();
-    await db.execute('''
-          CREATE TABLE IF NOT EXISTS mood_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            rating INTEGER,
-            moods TEXT,
-            note TEXT
-          )
-        ''');
-    await db.insert('mood_data', moodData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted mood data');
+  Future<bool> deleteFoodData(int id) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([FoodSchema], directory: directory.path);
+    _logger.info('Deleting food data with id: $id');
+    final success = await db.foods.delete(id);
+    return success;
   }
 
-  Future<List<Map<String, dynamic>>> getMoodData() async {
-    final db = await database;
+  Future<int> insertMoodData(Mood data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MoodSchema], directory: directory.path);
+    var id;
+    db.writeTxn(() async {
+      id = await db.moods.put(data); // insert & update
+    });
+    _logger.info('Inserted mood data with id: $id');
+    return id;
+  }
+  
+  Future<void> updateMoodData(Mood data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MoodSchema], directory: directory.path);
+    db.writeTxn(() async {
+      await db.moods.put(data); // insert & update
+    });
+    _logger.info('Updated mood data with id: ${data.id}');
+  }
+
+  Future<List<Mood>> getMoodData() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MoodSchema], directory: directory.path);
     _logger.info('Querying all mood data');
-    return await db.query('mood_data', orderBy: 'timestamp DESC');
+    final moodDataList = await db.moods.where().findAll();
+
+    return moodDataList;
   }
 
-  Future<void> insertJournalData(Map<String, dynamic> journalData) async {
-    final db = await database;
-    await db.insert('journal_data', journalData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted journal data');
+  Future<bool> deleteMoodData(int id) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([MoodSchema], directory: directory.path);
+    _logger.info('Deleting mood data with id: $id');
+    final success = await db.moods.delete(id);
+    return success;
   }
 
-  Future<List<Map<String, dynamic>>> getJournalData() async {
-    final db = await database;
+  Future<void> insertJournalData(Journal data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([JournalSchema], directory: directory.path);
+    var id;
+    db.writeTxn(() async {
+      id = await db.journals.put(data); // insert & update
+    });
+    _logger.info('Inserted journal data with id: $id');
+    return id;
+  }
+
+  Future<void> updateJournalData(Journal data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([JournalSchema], directory: directory.path);
+    db.writeTxn(() async {
+      await db.journals.put(data); // insert & update
+    });
+    _logger.info('Updated journal data with id: ${data.id}');
+  }
+
+  Future<List<Journal>> getJournalData() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([JournalSchema], directory: directory.path);
     _logger.info('Querying all journal data');
-    return await db.query('journal_data', orderBy: 'timestamp DESC');
+    final journalDataList = await db.journals.where().findAll();
+
+    return journalDataList;
   }
 
-  Future<void> insertSleepData(Map<String, dynamic> sleepData) async {
-    final db = await database;
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS sleep_data (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT,
-        sleep_time TEXT,
-        wake_time TEXT,
-        dream_log TEXT,
-        STILL_ASLEEP INTEGER
-      )
-    ''');
-    await db.insert('sleep_data', sleepData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted sleep data');
+  Future<bool> deleteJournalData(int id) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([JournalSchema], directory: directory.path);
+    _logger.info('Deleting journal data with id: $id');
+    final success = await db.journals.delete(id);
+    return success;
   }
 
-  Future<void> updateSleepData(int id, Map<String, dynamic> newData) async {
-    final db = await database;
-    await db.update(
-      'sleep_data',
-      newData,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    _logger.info('Updated sleep data with id: $id with newData: $newData');
+  Future<void> insertThoughtData(Thought data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([ThoughtSchema], directory: directory.path);
+    var id;
+    db.writeTxn(() async {
+      id = await db.thoughts.put(data); // insert & update
+    });
+    _logger.info('Inserted thought data with id: $id');
+    return id;
   }
 
-  Future<int> deleteSleepData(int id) async {
-    final db = await database;
-    _logger.info('Deleted sleep data with id: $id');
-    return await db.delete(
-      'sleep_data',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    
+  Future<void> updateThoughtData(Thought data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([ThoughtSchema], directory: directory.path);
+    db.writeTxn(() async {
+      await db.thoughts.put(data); // insert & update
+    });
+    _logger.info('Updated thought data with id: ${data.id}');
   }
 
-  Future<Map<String, dynamic>?> getStillAsleepEntry() async {
-    final db = await database;
-    final result = await db.query(
-      'sleep_data',
-      where: 'STILL_ASLEEP = ?',
-      whereArgs: [1],
-      orderBy: 'id DESC',
-      limit: 1,
-    );
-    if (result.isNotEmpty) {
-      return result.first;
-    }
-    return null;
+  Future<List<Thought>> getThoughtData() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([ThoughtSchema], directory: directory.path);
+    _logger.info('Querying all thought data');
+    final thoughtDataList = await db.thoughts.where().findAll();
+
+    return thoughtDataList;
+  }
+
+  Future<bool> deleteThoughtData(int id) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([ThoughtSchema], directory: directory.path);
+    _logger.info('Deleting thought data with id: $id');
+    final success = await db.thoughts.delete(id);
+    return success;
+  }
+
+  Future<void> insertSleepData(Sleep data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([SleepSchema], directory: directory.path);
+    var id;
+    db.writeTxn(() async {
+      id = await db.sleeps.put(data); // insert & update
+    });
+    _logger.info('Inserted sleep data with id: $id');
+    return id;
+  }
+
+  Future<void> updateSleepData(Sleep data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([SleepSchema], directory: directory.path);
+    db.writeTxn(() async {
+      await db.sleeps.put(data); // insert & update
+    });
+    _logger.info('Updated sleep data with id: ${data.id}');
+  }
+
+  Future<List<Sleep>> getSleepData() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([SleepSchema], directory: directory.path);
+    _logger.info('Querying all sleep data');
+    final sleepDataList = await db.sleeps.where().findAll();
+
+    return sleepDataList;
+  }
+
+  Future<bool> deleteSleepData(int id) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([SleepSchema], directory: directory.path);
+    _logger.info('Deleting sleep data with id: $id');
+    final success = await db.sleeps.delete(id);
+    return success;
+  }
+
+  Future<Sleep?> getStillAsleepEntry() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([SleepSchema], directory: directory.path);
+    final result = await db.sleeps.where().filter().sTILL_ASLEEPEqualTo(true).findFirst();
+    return result;
   }
 
   Future<int> getMaxSleepLogId() async {
-    final db = await database;
-    final List<Map<String, dynamic>> result = await db.rawQuery('SELECT MAX(id) as max_id FROM sleep_data');
-    final max_id = result.first['max_id'] as int;
-    _logger.info('Got max id: $max_id');
-    return max_id;
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      db = await Isar.open([SleepSchema], directory: directory.path);
 
-  }
+      _logger.info('Querying max sleep log id');
+      final maxId = await db.sleeps.where().idProperty().max() as int?;
 
-  Future<void> insertThoughtData(Map<String, dynamic> thoughtData) async {
-    final db = await database;
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS sleep_data (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT,
-        length INTEGER,
-        depth INTEGER,
-        thought_log TEXT,
-        STILL_THINKING INT
-      )
-    ''');
-    await db.insert('thought_data', thoughtData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted thought data');
-  }
-
-  Future<int> updateThoughtData(int id, Map<String, dynamic> newData) async {
-    final db = await database;
-    _logger.info('Updated thought data with id: $id with newData: $newData');
-    return await db.update(
-      'thought_data',
-      newData,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> getThoughtData() async {
-    final db = await database;
-    _logger.info('Querying all thought data');
-    return await db.query('thought_data', orderBy: 'timestamp ASC');
-  }
-
-  Future<int> deleteThoughtData(int id) async {
-    final db = await database;
-    _logger.info('Deleted thought data with id: $id');
-    return await db.delete(
-      'thought_data',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<int> getMaxThoughtLogId() async {
-    final db = await database;
-    final List<Map<String, dynamic>> result = await db.rawQuery('SELECT MAX(id) as max_id FROM thought_data');
-    final max_id = result.first['max_id'] as int;
-    _logger.info('Got max id: $max_id');
-    return max_id;
-
-  }
-
-  Future<Map<String, dynamic>?> getStillThinkingEntry() async {
-    final db = await database;
-    final result = await db.query(
-      'thought_data',
-      where: 'STILL_THINKING = ?',
-      whereArgs: [1],
-      orderBy: 'id DESC',
-      limit: 1,
-    );
-    if (result.isNotEmpty) {
-      return result.first;
+      _logger.info('Got max id: $maxId');
+      return maxId ?? 0;  // Return 0 if maxId is null
+    } catch (e) {
+      _logger.severe('Error querying max sleep log id: $e');
+      return 0;  // Return 0 in case of error
     }
-    return null;
+  }
+  Future<int> getMaxThoughtLogId() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      db = await Isar.open([ThoughtSchema], directory: directory.path);
+
+      _logger.info('Querying max sleep log id');
+      final maxId = await db.thoughts.where().idProperty().max() as int?;
+
+      _logger.info('Got max id: $maxId');
+      return maxId ?? 0;  // Return 0 if maxId is null
+    } catch (e) {
+      _logger.severe('Error querying max sleep log id: $e');
+      return 0;  // Return 0 in case of error
+    }
+
   }
 
-  Future<void> insertIngredient(Ingredient ingredient) async {
-    final db = await database;
-    final ingredientData = {
-      'created_at': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
-      'last_used': null,
-      'name': ingredient.name,
-      'category': ingredient.category,
-      'icon': ingredient.icon
-    };
-    await db.insert(
-      'ingredients',
-      ingredientData,
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+  Future<Thought?> getStillThinkingEntry() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([SleepSchema], directory: directory.path);
+    final result = await db.thoughts.where().filter().sTILL_THINKINGEqualTo(true).findFirst();
+    return result;
   }
 
-  Future<void> updateIngredient(Map<String, dynamic> ingredient) async {
-    final db = await database;
-    await db.update(
-      'ingredients',
-      ingredient,
-      where: 'id = ?',
-      whereArgs: [ingredient['id']],
-    );
+  Future<int> insertIngredient(Ingredient data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([IngredientSchema], directory: directory.path);
+    var id;
+    try {
+      db.writeTxn(() async {
+        id = await db.ingredients.put(data); // insert & update
+      });
+      _logger.info('Inserted sleep data with id: $id');
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting ingredient with data: $data \nerror: $e');
+      return 0;
+    }  
   }
 
-  Future<void> deleteIngredient(int id) async {
-    final db = await database;
-    await db.delete(
-      'ingredients',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  Future<void> updateIngredient(Ingredient data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([IngredientSchema], directory: directory.path);
+    var id;
+    try {
+      db.writeTxn(() async {
+        await db.ingredients.put(data); // insert & update
+      });
+      _logger.info('Inserted sleep data with id: $id');
+    } catch (e) {
+      _logger.severe('Error inserting ingredient with data: $data \nerror: $e');
+    }  
   }
 
-  Future<void> useIngredient(Ingredient ingredient) async {
-    final db = await database;
-    final updateData = {'last_used': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())};
-    await db.update(
-      'ingredients',
-      updateData,
-      where: 'name = ?',
-      whereArgs: [ingredient.name],
-    );
+  Future<bool> deleteIngredient(int id) async {
+    try{
+      final directory = await getApplicationDocumentsDirectory();
+      db = await Isar.open([IngredientSchema], directory: directory.path);
+      _logger.info('Deleting ingredient data with id: $id');
+      final success = await db.sleeps.delete(id);
+      return success;
+    }  catch (e) {
+      _logger.severe('Error deleting ingredient with id: $id \nerror: $e');
+      return false;
+    }  
+    
   }
 
-  Future<List<Ingredient>> getAllIngredients() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('ingredients');
+  Future<bool> useIngredient(Ingredient ingredient) async {
+    try{
+      final directory = await getApplicationDocumentsDirectory();
+      db = await Isar.open([IngredientSchema], directory: directory.path);
+      ingredient.last_used = DateTime.now();
+      updateIngredient(ingredient);
+      return true;
+    } catch (e) {
+      _logger.severe('Error using ingredient with id: ${ingredient.id} \nerror: $e');
+      return false;
+    }
+  }
 
-    return List.generate(maps.length, (i) {
-      return Ingredient(
-        name: maps[i]['name'],
-        category: maps[i]['category'],
-        icon: maps[i]['icon'],
-      );
-    });
+  Future<List<Ingredient>> getIngredients() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      db = await Isar.open([IngredientSchema], directory: directory.path);
+      final result = await db.ingredients.where().findAll();    
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting ingredients\nerror: $e');
+      return [];
+    }  
   }
 
   Future<List<Ingredient>> getIngredientsByRecency() async {
-    final db = await database;
-
-    final List<Map<String, dynamic>> maps = await db.query(
-      'ingredients',
-      orderBy: 'last_used DESC, name ASC',
-    );
-
-    return List.generate(maps.length, (i) {
-      return Ingredient(
-        name: maps[i]['name'],
-        category: maps[i]['category'],
-        icon: maps[i]['icon'],
-      );
-    });
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      db = await Isar.open([IngredientSchema], directory: directory.path);
+      final result = await db.ingredients.where().sortByTimestampDesc().findAll();    
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting ingredients by recency\nerror: $e');
+      return [];
+    }  
   }
 
   Future<List<Ingredient>> getIngredientsCategoryByRecency(String category) async {
-    final db = await database;
-
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
-      SELECT * FROM ingredients
-      WHERE category = ?
-      ORDER BY last_used DESC, name ASC
-    ''', [category]);
-
-    return List.generate(maps.length, (i) {
-      return Ingredient(
-        name: maps[i]['name'],
-        category: maps[i]['category'],
-        icon: maps[i]['icon'],
-      );
-    });
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      db = await Isar.open([IngredientSchema], directory: directory.path);
+      final result = await db.ingredients.where().filter().categoryEqualTo(category).sortByTimestampDesc().findAll();    
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting ingredient category by recency\nerror: $e');
+      return [];
+    } 
   }
 
-  Future<List<Ingredient>> getIngredientsByNamePrefix(Database db, String prefix) async {
-    final List<Map<String, dynamic>> maps = await db.query(
-      'ingredients',
-      where: 'name LIKE ?',
-      whereArgs: ['%$prefix%'],
-      orderBy: 'name ASC',
-    );
-  
-    return List.generate(maps.length, (i) {
-      return Ingredient(
-        name: maps[i]['name'],
-        category: maps[i]['category'],
-        icon: maps[i]['icon'],
-      );
-    });
+  Future<List<Ingredient>> getIngredientsByNamePrefix(String prefix) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      db = await Isar.open([IngredientSchema], directory: directory.path);
+      final ingredients = await db.ingredients
+        .where()
+        .filter()
+        .nameStartsWith(prefix)
+        .sortByName()
+        .findAll();
+      return ingredients;
+    } catch (e) {
+      _logger.severe('Error getting ingredients by name prefix\nerror: $e');
+      return [];
+    }
 
   }
 
