@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
+import '../database_helper.dart';
 import 'medicine_entry_dialog.dart';
 
 class MedicineDataPage extends StatefulWidget {
+  const MedicineDataPage({super.key});
+
   @override
   MedicineDataPageState createState() => MedicineDataPageState();
 }
@@ -45,7 +47,7 @@ class MedicineDataPageState extends State<MedicineDataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Medicine Data'),
+        title: const Text('Medicine Data'),
       ),
       body: ListView.builder(
         itemCount: records.length,

@@ -1,11 +1,11 @@
 import 'package:body_data_app/models/thought.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'database_helper.dart';
+import '../database_helper.dart';
 import 'package:logging/logging.dart';
-import 'models/thought.dart';
 
 class ThoughtEntryDialog extends StatefulWidget {
+  const ThoughtEntryDialog({super.key});
+
 
   @override
   _ThoughtEntryDialogState createState() => _ThoughtEntryDialogState();
@@ -17,7 +17,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
   final _formKey = GlobalKey<FormState>();
   String _entry = '';
   int _depth = 1;
-  int _length = 0;
+  final int _length = 0;
 
   final Logger _logger = Logger('ThoughtEntryDialog');
 
@@ -44,7 +44,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Enter Your Thoughts'),
+            title: const Text('Enter Your Thoughts'),
             content: SingleChildScrollView(
               child: Column(
                 children: [
@@ -64,7 +64,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
                   Form(
                     key: _formKey,
                     child: TextFormField(
-                      decoration: InputDecoration(labelText: 'Thought Entry'),
+                      decoration: const InputDecoration(labelText: 'Thought Entry'),
                       maxLines: 17,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -93,7 +93,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
                         await dbHelper.deleteThoughtData(latestEntry.id);
                         Navigator.of(context).pop();
                       },
-                      child: Text('No Thoughts'),
+                      child: const Text('No Thoughts'),
                     ),
                     TextButton(
                       onPressed: () async {
@@ -109,6 +109,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
                         thoughtData.length = thoughtTime;
                         thoughtData.depth = _depth;
                         thoughtData.thought_log = _entry;
+                        thoughtData.location = null;
                         thoughtData.STILL_THINKING = false;
 
                         _logger.info('Updating: ${thoughtData.id} with data: $thoughtData');
@@ -116,7 +117,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
 
                         Navigator.of(context).pop();
                       },
-                      child: Text('Save'),
+                      child: const Text('Save'),
                     ),
                   ],
                 ),

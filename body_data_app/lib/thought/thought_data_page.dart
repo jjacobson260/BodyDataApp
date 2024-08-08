@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'database_helper.dart';
+import '../database_helper.dart';
 import 'thought_entry_dialog.dart';
 
 class ThoughtDataPage extends StatefulWidget {
+  const ThoughtDataPage({super.key});
+
   @override
   _ThoughtDataPageState createState() => _ThoughtDataPageState();
 }
@@ -31,7 +32,7 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
     await showDialog(
       context: context,
       builder: (context) {
-        return ThoughtEntryDialog();
+        return const ThoughtEntryDialog();
       },
     );
     _fetchThoughtLogs();
@@ -54,7 +55,7 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Thought Data'),
+        title: const Text('Thought Data'),
       ),
       body: ListView.builder(
         itemCount: _thoughtLogs.length,
@@ -74,11 +75,11 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit),
+                    icon: const Icon(Icons.edit),
                     onPressed: () => _editThoughtLog(thoughtLog),
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed: () => _deleteThoughtLog(thoughtLog['id']),
                   ),
                 ],

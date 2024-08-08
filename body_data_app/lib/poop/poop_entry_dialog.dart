@@ -1,14 +1,13 @@
 import 'package:body_data_app/models/poop.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'database_helper.dart';
-import 'date_time_picker_dialog.dart';
+import '../database_helper.dart';
+import '../date_time_picker_dialog.dart';
 
 class PoopEntryDialog extends StatefulWidget {
   final bool isEditMode;
   final Map<String, dynamic>? initialData;
 
-  PoopEntryDialog({this.isEditMode=false, this.initialData});
+  const PoopEntryDialog({super.key, this.isEditMode=false, this.initialData});
 
   @override
   _PoopEntryDialogState createState() => _PoopEntryDialogState();
@@ -43,6 +42,8 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
     data.bristolRating = _bristolRating;
     data.urgency = _urgency;
     data.blood = _blood ? true : false;
+    data.imagePath = null;
+    data.location = null;
 
     if (widget.isEditMode && widget.initialData != null) {
       data.id = widget.initialData!['id'];
@@ -59,16 +60,16 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          titlePadding: EdgeInsets.all(0),
+          titlePadding: const EdgeInsets.all(0),
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0),
+              const Padding(
+                padding: EdgeInsets.only(left: 16.0),
                 child: Text('Bristol Rating Chart'),
               ),
               IconButton(
-                icon: Icon(Icons.close),
+                icon: const Icon(Icons.close),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -87,7 +88,7 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
       title: Column (
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Enter Poop Data'),
+          const Text('Enter Poop Data'),
           DateTimePickerDialog(
             initialDateTime: _selectedDateTime,
             onDateTimeSelected: (dateTime) {
@@ -117,13 +118,13 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
                 });
               },
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Bristol Rating: $_bristolRating'),
                 IconButton(
-                  icon: Icon(Icons.info_outline),
+                  icon: const Icon(Icons.info_outline),
                   onPressed: _showBristolChart,
                 ),
               ],
@@ -140,10 +141,10 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
                 });
               },
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Row(
               children: [
-                Text('Blood: '),
+                const Text('Blood: '),
                 Checkbox(
                   value: _blood,
                   onChanged: (value) {
@@ -154,11 +155,11 @@ class _PoopEntryDialogState extends State<PoopEntryDialog> {
                 ),
               ],
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Center(
               child: ElevatedButton(
                 onPressed: _saveData,
-                child: Text('Save'),
+                child: const Text('Save'),
               ),
             ),
             

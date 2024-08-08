@@ -1,14 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
-import 'database_helper.dart';
-import 'full_screen_image_page.dart';
-import 'models/food.dart';
+import '../database_helper.dart';
+import '../full_screen_image_page.dart';
+import '../models/food.dart';
+import 'package:intl/intl.dart';
 
 class FoodDataPage extends StatefulWidget {
+  const FoodDataPage({super.key});
+
   @override
   _FoodDataPageState createState() => _FoodDataPageState();
 }
@@ -25,6 +24,7 @@ class _FoodDataPageState extends State<FoodDataPage> {
   Map<String, dynamic> convertFoodToMap(Food food) {
     final map = {
       'id': food.id,
+      'timestamp': food.timestamp,
       'description': food.description,
       'image_path': food.image_path,
       'ingredients_json': food.ingredients_json,
@@ -36,11 +36,11 @@ class _FoodDataPageState extends State<FoodDataPage> {
 
   Future<void> _fetchFoodData() async {
     List<Food> data = await DatabaseHelper().getFoodData();
-    final data_map = data.map((object) {
+    final dataMap = data.map((object) {
       return convertFoodToMap(object);
     }).toList();
     setState(() {
-      _foodData = data_map;
+      _foodData = dataMap;
     });
   }
 
@@ -57,7 +57,7 @@ class _FoodDataPageState extends State<FoodDataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Food Data'),
+        title: const Text('Food Data'),
       ),
       body: ListView.builder(
         itemCount: _foodData.length,
@@ -66,7 +66,7 @@ class _FoodDataPageState extends State<FoodDataPage> {
           return Card(
             child: ListTile(
               
-              title: Text(item['timestamp']),
+              title: Text(DateFormat('MM-dd-yy HH:mm').format(item['timestamp'])),
               subtitle: Text(item['description']),
               trailing: item['image_path'] != null
                   ? GestureDetector(
@@ -77,7 +77,7 @@ class _FoodDataPageState extends State<FoodDataPage> {
                         width: 50,
                       ),
                     )
-                  : SizedBox.shrink(),
+                  : const SizedBox.shrink(),
             ),
           );
         },

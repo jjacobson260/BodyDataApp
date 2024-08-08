@@ -4,12 +4,12 @@ import 'thought_log_dialog.dart';
 class ThoughtOptionsDialog extends StatelessWidget {
   final VoidCallback onStartThinking;
 
-  ThoughtOptionsDialog({required this.onStartThinking});
+  const ThoughtOptionsDialog({super.key, required this.onStartThinking});
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Thought Options'),
+      title: const Text('Thought Options'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -18,15 +18,15 @@ class ThoughtOptionsDialog extends StatelessWidget {
               onStartThinking();
               Navigator.of(context).pop();
             },
-            child: Text('Start Thinking'),
+            child: const Text('Start Thinking'),
           ),
-          SizedBox(height: 7),
+          const SizedBox(height: 7),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               _showLogThoughtDialog(context);
             },
-            child: Text('Log Thinking'),
+            child: const Text('Log Thinking'),
           ),
         ],
       ),
@@ -38,7 +38,7 @@ class ThoughtOptionsDialog extends StatelessWidget {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return ThoughtLogDialog();
+        return const ThoughtLogDialog();
       },
     );
   }

@@ -1,8 +1,10 @@
-import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
+import '../database_helper.dart';
 
 class MoodDataPage extends StatefulWidget {
+  const MoodDataPage({super.key});
+
   @override
   _MoodDataPageState createState() => _MoodDataPageState();
 }
@@ -27,7 +29,7 @@ class _MoodDataPageState extends State<MoodDataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mood Data'),
+        title: const Text('Mood Data'),
       ),
       body: ListView.builder(
         itemCount: _moodData.length,
@@ -35,7 +37,7 @@ class _MoodDataPageState extends State<MoodDataPage> {
           final item = _moodData[index];
           return Card(
             child: ListTile(
-              title: Text(item['timestamp']),
+              title: Text(DateFormat('MM-dd-yy HH:mm').format(item['timestamp'])),
               subtitle: Text("Rating: ${item['rating']}\nMoods: ${item['moods']}\n${item['note']}"),
             ),
           );

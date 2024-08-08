@@ -5,7 +5,7 @@ class DateTimePickerDialog extends StatefulWidget {
   final DateTime initialDateTime;
   final void Function(DateTime selectedDateTime) onDateTimeSelected;
 
-  DateTimePickerDialog({
+  const DateTimePickerDialog({super.key, 
     required this.initialDateTime,
     required this.onDateTimeSelected,
   });
@@ -64,8 +64,8 @@ class _DateTimePickerDialogState extends State<DateTimePickerDialog> {
           children: [
             // Clock icon      
             Text(DateFormat('MM-dd-yy HH:mm').format(_selectedDateTime)),
-            SizedBox(width: 8), 
-            Icon(Icons.schedule), // Display selected datetime
+            const SizedBox(width: 8), 
+            const Icon(Icons.schedule), // Display selected datetime
           ],
         ),
       ),

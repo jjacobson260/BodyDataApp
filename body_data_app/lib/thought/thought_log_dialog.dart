@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'database_helper.dart';
-import 'date_time_picker_dialog.dart';
-import 'models/thought.dart';
+import 'package:logging/logging.dart';
+import '../database_helper.dart';
+import '../date_time_picker_dialog.dart';
+import '../models/thought.dart';
 
 class ThoughtLogDialog extends StatefulWidget {
+  const ThoughtLogDialog({super.key});
+
   @override
   _ThoughtLogDialogState createState() => _ThoughtLogDialogState();
 }
 
 class _ThoughtLogDialogState extends State<ThoughtLogDialog> {
+
+  final Logger _logger = Logger('ThoughtLogDialog');
+
+  var db = DatabaseHelper();
   DateTime _startThoughtTime = DateTime.now();
   DateTime _endThoughtTime = DateTime.now();
   int _depth = 1;
@@ -23,33 +29,37 @@ class _ThoughtLogDialogState extends State<ThoughtLogDialog> {
   }
 
   void _saveThoughtData() async {
-
+    Thought? lastThought = await db.getStillThinkingEntry();
+    if (lastThought != null) {
+      _startThoughtTime = lastThought.start_time ?? DateTime.now();
+    }
     final length = calculateMinutesBetween(_startThoughtTime, _endThoughtTime);
-    Thought thoughtData = Thought();
+    Thought thoughtData = await db.getStillThinkingEntry() ?? Thought();
     thoughtData.timestamp = DateTime.now();
     thoughtData.start_time = _startThoughtTime;
     thoughtData.end_time = _endThoughtTime;
     thoughtData.length = length;
     thoughtData.depth = _depth;
     thoughtData.thought_log = _thoughtLog;
+    thoughtData.location = null;
     thoughtData.STILL_THINKING = false;
-
-    await DatabaseHelper().insertThoughtData(thoughtData);
+    _logger.info("updating thought id: ${thoughtData.id} with data: $thoughtData");
+    await DatabaseHelper().updateThoughtData(thoughtData);
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Log Thought'),
+      title: const Text('Log Thought'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text('Start'),
+              const Expanded(
                 flex: 2,
+                child: Text('Start'),
               ),
               Expanded(
                 flex: 5,
@@ -64,12 +74,12 @@ class _ThoughtLogDialogState extends State<ThoughtLogDialog> {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: Text('End'),
+              const Expanded(
                 flex: 2,
+                child: Text('End'),
               ),
               Expanded(
                 flex: 5,
@@ -84,7 +94,7 @@ class _ThoughtLogDialogState extends State<ThoughtLogDialog> {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Center(child: Text('Depth: $_depth')),
           Slider(
             value: _depth.toDouble(),
@@ -98,9 +108,9 @@ class _ThoughtLogDialogState extends State<ThoughtLogDialog> {
               });
             },
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           TextFormField(
-            decoration: InputDecoration(labelText: 'Thought Log'),
+            decoration: const InputDecoration(labelText: 'Thought Log'),
             onChanged: (value) {
               setState(() {
                 _thoughtLog = value;
@@ -112,7 +122,7 @@ class _ThoughtLogDialogState extends State<ThoughtLogDialog> {
       actions: [
         ElevatedButton(
           onPressed: _saveThoughtData,
-          child: Text('Save'),
+          child: const Text('Save'),
         ),
       ],
     );

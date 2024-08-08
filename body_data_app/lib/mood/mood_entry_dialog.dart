@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'database_helper.dart';
+import '../database_helper.dart';
 import 'emoji_selection_widget.dart';
-import 'models/mood.dart';
+import '../models/mood.dart';
 
 class MoodEntryDialog extends StatefulWidget {
+  const MoodEntryDialog({super.key});
+
   @override
   _MoodEntryDialogState createState() => _MoodEntryDialogState();
 }
@@ -26,12 +27,13 @@ class _MoodEntryDialogState extends State<MoodEntryDialog> {
       moodData.rating = _moodRating;
       moodData.moods_json = _selectedEmojis.join('|');
       moodData.note = _note;
+      moodData.location = null;
 
       await DatabaseHelper().insertMoodData(moodData);
 
       Navigator.of(context).pop(); // Close the dialog
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Mood data saved'),
       ));
     }
@@ -40,8 +42,8 @@ class _MoodEntryDialogState extends State<MoodEntryDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Enter Mood Data'),
-      content: Container(
+      title: const Text('Enter Mood Data'),
+      content: SizedBox(
         width: double.maxFinite,
         child: SingleChildScrollView(
           child: Form(
@@ -63,8 +65,8 @@ class _MoodEntryDialogState extends State<MoodEntryDialog> {
                     });
                   },
                 ),
-                SizedBox(height: 16),
-                Text('Select Moods:'),
+                const SizedBox(height: 16),
+                const Text('Select Moods:'),
                 Container(
                   child: EmojiSelectionWidget(
                     onSelectionChanged: (selectedEmojis) {
@@ -74,18 +76,18 @@ class _MoodEntryDialogState extends State<MoodEntryDialog> {
                     },
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Note'),
+                  decoration: const InputDecoration(labelText: 'Note'),
                   maxLines: 10,
                   onSaved: (value) {
                     _note = value!;
                   },
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _saveData,
-                  child: Text('Save'),
+                  child: const Text('Save'),
                 ),
               ],
             ),

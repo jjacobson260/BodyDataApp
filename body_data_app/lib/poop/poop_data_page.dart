@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:csv/csv.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:intl/intl.dart';
 import 'poop_entry_dialog.dart';
-import 'database_helper.dart';
-import 'export_helper.dart';
+import '../database_helper.dart';
+import '../export_helper.dart';
 import 'poop_stats_widget.dart';
 
 class PoopDataPage extends StatefulWidget {
+  const PoopDataPage({super.key});
+
   @override
   _PoopDataPageState createState() => _PoopDataPageState();
 }
@@ -34,7 +32,7 @@ class _PoopDataPageState extends State<PoopDataPage> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator());
       },
     );
 
@@ -46,14 +44,14 @@ class _PoopDataPageState extends State<PoopDataPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Export Complete'),
+          title: const Text('Export Complete'),
           content: Text('Data exported to: $filePath'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -83,7 +81,7 @@ class _PoopDataPageState extends State<PoopDataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Poop Data'),
+        title: const Text('Poop Data'),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) async {
@@ -109,10 +107,10 @@ class _PoopDataPageState extends State<PoopDataPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
 
-          Center(child: PoopStatsWidget()),
+          const Center(child: PoopStatsWidget()),
           Expanded(
             child:_records.isEmpty
-            ? Center(child: Text('No records found'))
+            ? const Center(child: Text('No records found'))
             : ListView.builder(
               itemCount: _records.length,
               itemBuilder: (context, index) {

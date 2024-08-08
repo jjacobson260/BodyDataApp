@@ -1,10 +1,7 @@
-import 'dart:math';
 
 import 'package:body_data_app/models/export.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
 import 'database_helper.dart';
-import 'package:isar/isar.dart';
 import 'package:csv/csv.dart';
 import 'dart:io';
 
@@ -15,21 +12,17 @@ class ExportHelper {
     // Determine export type
     String query;
     String exportType;
-    var data;
+    Future<List> data;
+    List<Map<String, dynamic>> mapData = [];
     if (isFullExport) {
       data = db.getAllFromTable(table);
       exportType = "full";
+      mapData = await db.getAllDataFromTableAsMap(table);
     } else {
-      var last_export = await db.getLastIncrementalExportByTable(table);
-      data = db.getAllFromTableSinceDate(table, last_export);
+      var lastExport = await db.getLastIncrementalExportByTable(table);
+      mapData = await db.getAllFromTableSinceDateAsMap(table, lastExport);
       exportType = "incremental";
     }
-
-    // Fetch data
-    // Convert data to Map and then CSV
-    List<Map<String, dynamic>> mapData = data.map((object) {
-      
-    }).toList();
 
     List<List<dynamic>> csvData = [
       mapData.first.keys.toList(), // headers
@@ -40,7 +33,7 @@ class ExportHelper {
 
     // Get directory
     final directory = await getApplicationDocumentsDirectory();
-    final filePath = '${directory.path}/poop_data_$exportType\_${DateTime.now().millisecondsSinceEpoch}.csv';
+    final filePath = '${directory.path}/poop_data_${exportType}_${DateTime.now().millisecondsSinceEpoch}.csv';
 
     // Write to file
     final file = File(filePath);

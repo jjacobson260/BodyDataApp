@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
+import '../database_helper.dart';
 import 'package:numberpicker/numberpicker.dart';
-import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
-import 'models/sleep.dart';
+import '../models/sleep.dart';
 
 
 class SleepEntryDialog extends StatefulWidget {
+  const SleepEntryDialog({super.key});
+
   @override
   _SleepEntryDialogState createState() => _SleepEntryDialogState();
 }
 
 class _SleepEntryDialogState extends State<SleepEntryDialog> {
   int _minutesToFallAsleep = 5;
-  TextEditingController _dreamLogController = TextEditingController();
+  final TextEditingController _dreamLogController = TextEditingController();
 
   final Logger _logger = Logger('SleepEntryDialog');
 
@@ -34,13 +35,13 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Center(child: Text('Waking Up')),
+            title: const Center(child: Text('Waking Up')),
             content: StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Minutes to Sleep?'),
+                    const Text('Minutes to Sleep?'),
                     NumberPicker(
                       value: _minutesToFallAsleep,
                       minValue: 5,
@@ -51,7 +52,7 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
                     ),
                     TextField(
                       controller: _dreamLogController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Dream Log',
                       ),
                     ),
@@ -70,7 +71,7 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
                         await dbHelper.deleteSleepData(latestEntry.id);
                         Navigator.of(context).pop();
                       },
-                      child: Text('No Sleep'),
+                      child: const Text('No Sleep'),
                     ),
                     TextButton(
                       onPressed: () async {
@@ -95,7 +96,7 @@ class _SleepEntryDialogState extends State<SleepEntryDialog> {
 
                         Navigator.of(context).pop();
                       },
-                      child: Text('Save'),
+                      child: const Text('Save'),
                     ),
                   ],
                 ),

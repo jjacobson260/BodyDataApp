@@ -1,27 +1,26 @@
 import 'dart:io';
-import 'package:body_data_app/main.dart';
 import 'package:body_data_app/models/food.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'date_time_picker_dialog.dart'; 
-import 'image_selector_widget.dart';
-import 'ingredient_picker.dart';
+import '../date_time_picker_dialog.dart'; 
+import '../image_selector_widget.dart';
 import 'ingredient_info.dart';
-import 'database_helper.dart';
+import '../database_helper.dart';
 
 class FoodEntryDialog extends StatefulWidget {
+  const FoodEntryDialog({super.key});
+
   @override
   _FoodEntryDialogState createState() => _FoodEntryDialogState();
 }
 
 class _FoodEntryDialogState extends State<FoodEntryDialog> {
   final _formKey = GlobalKey<FormState>();
-  TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   DateTime _selectedDateTime = DateTime.now(); // Track selected datetime
   File? _image;
 
-  List<IngredientInfo> _ingredients = []; // List of all ingredients
+  final List<IngredientInfo> _ingredients = []; // List of all ingredients
   List<IngredientInfo> _selectedIngredients = []; // List of selected ingredients
 
 
@@ -42,7 +41,7 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
 
     Navigator.of(context).pop();
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Food data saved'),
     ));
   }
@@ -71,7 +70,7 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Enter Food Data'),
+          const Text('Enter Food Data'),
           DateTimePickerDialog(
             initialDateTime: _selectedDateTime,
             onDateTimeSelected: (dateTime) {
@@ -91,7 +90,7 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
             children: <Widget>[
               TextFormField(
                 controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
+                decoration: const InputDecoration(labelText: 'Description'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a description';
@@ -104,7 +103,7 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
                 selectedIngredients: _selectedIngredients,
                 onSelectionChanged: _onIngredientSelectionChanged,
               ),  */            
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               ImageSelector(
                 onImageSelected: (image) {
                   setState(() {
@@ -112,11 +111,11 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
                   });
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Center(
                 child: ElevatedButton(
                   onPressed: _saveFoodData,
-                  child: Text('Save'),
+                  child: const Text('Save'),
                 ),
               )          
             ],

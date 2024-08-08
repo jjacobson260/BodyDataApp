@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'database_helper.dart';
-import 'date_time_picker_dialog.dart';
-import 'models/sleep.dart';
+import '../database_helper.dart';
+import '../date_time_picker_dialog.dart';
+import '../models/sleep.dart';
 
 class SleepLogDialog extends StatefulWidget {
+  const SleepLogDialog({super.key});
+
   @override
   _SleepLogDialogState createState() => _SleepLogDialogState();
 }
@@ -20,6 +21,7 @@ class _SleepLogDialogState extends State<SleepLogDialog> {
     sleepData.sleep_time = _startSleepTime;
     sleepData.wake_time = _endSleepTime;
     sleepData.dream_log = _dreamLog;
+    sleepData.location = null;
     await DatabaseHelper().insertSleepData(sleepData);
     Navigator.of(context).pop();
   }
@@ -27,15 +29,15 @@ class _SleepLogDialogState extends State<SleepLogDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Log Sleep'),
+      title: const Text('Log Sleep'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text('Start'),
+              const Expanded(
                 flex: 2,
+                child: Text('Start'),
               ),
               Expanded(
                 flex: 5,
@@ -50,12 +52,12 @@ class _SleepLogDialogState extends State<SleepLogDialog> {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: Text('End'),
+              const Expanded(
                 flex: 2,
+                child: Text('End'),
               ),
               Expanded(
                 flex: 5,
@@ -71,7 +73,7 @@ class _SleepLogDialogState extends State<SleepLogDialog> {
             ],
           ),
           TextFormField(
-            decoration: InputDecoration(labelText: 'Dream Log'),
+            decoration: const InputDecoration(labelText: 'Dream Log'),
             onChanged: (value) {
               setState(() {
                 _dreamLog = value;
@@ -83,7 +85,7 @@ class _SleepLogDialogState extends State<SleepLogDialog> {
       actions: [
         ElevatedButton(
           onPressed: _saveSleepData,
-          child: Text('Save'),
+          child: const Text('Save'),
         ),
       ],
     );

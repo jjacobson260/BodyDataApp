@@ -28,5 +28,5 @@ dependencies {
 
 buildRunner {
   // Tells build_runner to generate code for Isar models
-  generateFor: ['isar']
+  generateFor 'isar'
 }

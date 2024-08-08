@@ -7,16 +7,16 @@ import 'package:path/path.dart' as path;
 class FullScreenImagePage extends StatelessWidget {
   final String imagePath;
 
-  FullScreenImagePage({required this.imagePath});
+  const FullScreenImagePage({super.key, required this.imagePath});
 
   Future<void> _saveImageToGallery(BuildContext context) async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
         final result = await ImageGallerySaver.saveFile(imagePath);
         if (result["isSuccess"]) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image saved to gallery')));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Image saved to gallery')));
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save image')));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to save image')));
         }
       } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
         String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
@@ -39,7 +39,7 @@ class FullScreenImagePage extends StatelessWidget {
       appBar: AppBar(
         actions: [
           IconButton(
-            icon: Icon(Icons.save_alt),
+            icon: const Icon(Icons.save_alt),
             onPressed: () => _saveImageToGallery(context),
           ),
         ],

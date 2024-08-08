@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
+import '../database_helper.dart';
 
 class PoopStatsWidget extends StatefulWidget {
+  const PoopStatsWidget({super.key});
+
   @override
   _PoopStatsWidgetState createState() => _PoopStatsWidgetState();
 }
@@ -30,7 +32,7 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
       color = Colors.green;
     } else {
       color = Colors.red;
-    };
+    }
     return color;
   }
 
@@ -40,7 +42,7 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
       color = Colors.green;
     } else {
       color = Colors.red;
-    };
+    }
     return color;
   }
 
@@ -80,11 +82,11 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: isLoading
-            ? Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator())
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Center(child: Text('24hr Quick Stats')),
+                  const Center(child: Text('24hr Quick Stats')),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -121,7 +123,7 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
         Text(title),
         Text(
           average.toStringAsFixed(2),
-          style: TextStyle(fontSize: 24),
+          style: const TextStyle(fontSize: 24),
         ),
         Text(
           '${percentDifference.toStringAsFixed(2)}%',
@@ -129,7 +131,7 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
             color: getPercentColorValue(percentDifference, average, threshold),
           ),
         ),
-        Text('vs week'),
+        const Text('vs week'),
       ],
     );
   }
@@ -141,7 +143,7 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
         Text(title),
         Text(
           count.toString(),
-          style: TextStyle(fontSize: 24),
+          style: const TextStyle(fontSize: 24),
         ),
         Text(
           '${percentDifference.toStringAsFixed(2)}%',
@@ -149,7 +151,7 @@ class _PoopStatsWidgetState extends State<PoopStatsWidget> {
             color: getCountColorValue(count, threshold),
           ),
         ),
-        Text('vs week'),
+        const Text('vs week'),
       ],
     );
   }

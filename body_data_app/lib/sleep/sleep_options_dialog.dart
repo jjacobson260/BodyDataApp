@@ -4,12 +4,12 @@ import 'sleep_log_dialog.dart';
 class SleepOptionsDialog extends StatelessWidget {
   final VoidCallback onStartSleep;
 
-  SleepOptionsDialog({required this.onStartSleep});
+  const SleepOptionsDialog({super.key, required this.onStartSleep});
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Sleep'),
+      title: const Text('Sleep'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -18,15 +18,15 @@ class SleepOptionsDialog extends StatelessWidget {
               onStartSleep();
               Navigator.of(context).pop();
             },
-            child: Text('Start Sleep'),
+            child: const Text('Start Sleep'),
           ),
-          SizedBox(height: 7),
+          const SizedBox(height: 7),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               _showLogSleepDialog(context);
             },
-            child: Text('Log Sleep'),
+            child: const Text('Log Sleep'),
           ),
         ],
       ),
@@ -38,7 +38,7 @@ class SleepOptionsDialog extends StatelessWidget {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return SleepLogDialog();
+        return const SleepLogDialog();
       },
     );
   }

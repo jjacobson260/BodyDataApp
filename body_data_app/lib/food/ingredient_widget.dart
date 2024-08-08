@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'ingredient_info.dart';
-import 'models/ingredient.dart';
+import '../models/ingredient.dart';
 
 class IngredientWidget extends StatelessWidget {
   final Ingredient ingredient;
   final bool isSelected;
   final void Function(bool selected) onSelected;
 
-  IngredientWidget({
+  const IngredientWidget({super.key, 
     required this.ingredient,
     required this.isSelected,
     required this.onSelected,
@@ -20,7 +19,7 @@ class IngredientWidget extends StatelessWidget {
         onSelected(!isSelected);
       },
       child: Container(
-        padding: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
           border: Border.all(color: isSelected ? Colors.blue : Colors.grey),
           borderRadius: BorderRadius.circular(8.0),
@@ -32,14 +31,14 @@ class IngredientWidget extends StatelessWidget {
                 ? Image.asset(ingredient.icon, height: 50, width: 50)
                 : Text(
                     ingredient.icon,
-                    style: TextStyle(fontSize: 24),
+                    style: const TextStyle(fontSize: 24),
                   ),
-            SizedBox(height: 8.0),
+            const SizedBox(height: 8.0),
             Text(ingredient.name),
             // Display category (optional)
             Text(
               ingredient.category,
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:isar/isar.dart';
-import 'database_helper.dart';
-import 'date_time_picker_dialog.dart'; 
-import 'models/medicine.dart';
+import '../database_helper.dart';
+import '../date_time_picker_dialog.dart'; 
+import '../models/medicine.dart';
 
 class MedicineEntryDialog extends StatefulWidget {
   final bool isEditMode;
   final Map<String, dynamic>? initialData;
 
-  MedicineEntryDialog({this.isEditMode=false, this.initialData});
+  const MedicineEntryDialog({super.key, this.isEditMode=false, this.initialData});
 
   @override
   _MedicineEntryDialogState createState() => _MedicineEntryDialogState();
@@ -87,7 +85,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
 
       Navigator.of(context).pop();
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Medicine data saved'),
       ));
     }
@@ -99,7 +97,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Enter Medicine Data'),
+          const Text('Enter Medicine Data'),
           DateTimePickerDialog(
             initialDateTime: _selectedDateTime,
             onDateTimeSelected: (dateTime) {
@@ -118,7 +116,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
             children: <Widget>[
               DropdownButtonFormField<String>(
                 value: _selectedMedicineName.isNotEmpty ? _selectedMedicineName : null,
-                decoration: InputDecoration(labelText: 'Medicine Name'),
+                decoration: const InputDecoration(labelText: 'Medicine Name'),
                 items: _medicineNames.map((name) {
                   return DropdownMenuItem<String>(
                     value: name,
@@ -126,7 +124,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                   );
                 }).toList()
                   ..add(
-                    DropdownMenuItem<String>(
+                    const DropdownMenuItem<String>(
                       value: 'New Medicine',
                       child: Text('Add New Medicine'),
                     ),
@@ -151,7 +149,8 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
               ),
               if (_selectedMedicineName == 'New Medicine')
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'New Medicine Name'),
+                  decoration: const InputDecoration(labelText: 'New Medicine Name'),
+                  initialValue: '',
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a new medicine name';
@@ -163,7 +162,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                   },
                 ),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Dosage'),
+                decoration: const InputDecoration(labelText: 'Dosage'),
                 initialValue: _dosage.toString(),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -180,7 +179,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
               ),
               DropdownButtonFormField<String>(
                 value: _selectedUnit.isNotEmpty ? _selectedUnit : null,
-                decoration: InputDecoration(labelText: 'Unit'),
+                decoration: const InputDecoration(labelText: 'Unit'),
                 items: _medicineUnits.map((unit) {
                   return DropdownMenuItem<String>(
                     value: unit,
@@ -188,7 +187,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                   );
                 }).toList()
                   ..add(
-                    DropdownMenuItem<String>(
+                    const DropdownMenuItem<String>(
                       value: 'New Unit',
                       child: Text('Add New Unit'),
                     ),
@@ -207,7 +206,7 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
               ),
               if (_selectedUnit == 'New Unit')
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'New Unit'),
+                  decoration: const InputDecoration(labelText: 'New Unit'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a new unit';
@@ -218,11 +217,11 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                     _newUnit = value!;
                   },
                 ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Center(
                 child: ElevatedButton(
                   onPressed: _saveMedicineData,
-                  child: Text('Save'),
+                  child: const Text('Save'),
                 ),
               )
               

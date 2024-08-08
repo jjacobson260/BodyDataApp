@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 class EmojiSelectionWidget extends StatefulWidget {
   final Function(List<String>) onSelectionChanged;
 
-  EmojiSelectionWidget({required this.onSelectionChanged});
+  const EmojiSelectionWidget({super.key, required this.onSelectionChanged});
 
   @override
   _EmojiSelectionWidgetState createState() => _EmojiSelectionWidgetState();
 }
 
 class _EmojiSelectionWidgetState extends State<EmojiSelectionWidget> {
-  List<String> _selectedEmojis = [];
-  List<String> _emojis = [
+  final List<String> _selectedEmojis = [];
+  final List<String> _emojis = [
     '😊', '😢', '😡', '😲',
     '😍', '😎', '🤯', '😴',
     '🥳', '🤢', '😱', '🤔',
@@ -32,8 +32,8 @@ class _EmojiSelectionWidgetState extends State<EmojiSelectionWidget> {
   Widget build(BuildContext context) {
     return GridView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4, // Adjust the number of columns as needed
         crossAxisSpacing: 8.0,
         mainAxisSpacing: 8.0,
@@ -46,7 +46,7 @@ class _EmojiSelectionWidgetState extends State<EmojiSelectionWidget> {
         return GestureDetector(
           onTap: () => _toggleEmojiSelection(emoji),
           child: Container(
-            padding: EdgeInsets.all(4.0), // Adjust padding as needed
+            padding: const EdgeInsets.all(4.0), // Adjust padding as needed
             decoration: BoxDecoration(
               color: isSelected ? Colors.blue : Colors.transparent,
               borderRadius: BorderRadius.circular(8.0),
@@ -54,7 +54,7 @@ class _EmojiSelectionWidgetState extends State<EmojiSelectionWidget> {
             child: Center(
               child: Text(
                 emoji,
-                style: TextStyle(fontSize: 24.0),
+                style: const TextStyle(fontSize: 24.0),
               ),
             ),
           ),

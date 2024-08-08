@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'ingredient_info.dart';
 import 'ingredient_widget.dart';
-import 'database_helper.dart';
-import 'models/ingredient.dart';
+import '../database_helper.dart';
+import '../models/ingredient.dart';
 
 class IngredientPicker extends StatefulWidget {
   final List<Ingredient> selectedIngredients;
   final void Function(List<Ingredient> selectedIngredients) onSelectionChanged;
 
-  IngredientPicker({
+  const IngredientPicker({super.key, 
     required this.selectedIngredients,
     required this.onSelectionChanged,
   });

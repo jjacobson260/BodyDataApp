@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'database_helper.dart';
-import 'models/ingredient.dart';
+import '../database_helper.dart';
+import '../models/ingredient.dart';
 
 class IngredientInfo {
   final String name;

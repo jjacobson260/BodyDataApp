@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'database_helper.dart';
+import '../database_helper.dart';
 import 'sleep_entry_dialog.dart';
 
 class SleepDataPage extends StatefulWidget {
+  const SleepDataPage({super.key});
+
   @override
   _SleepDataPageState createState() => _SleepDataPageState();
 }
@@ -32,7 +33,7 @@ class _SleepDataPageState extends State<SleepDataPage> {
     await showDialog(
       context: context,
       builder: (context) {
-        return SleepEntryDialog();
+        return const SleepEntryDialog();
       },
     );
     _fetchSleepLogs();
@@ -56,7 +57,7 @@ class _SleepDataPageState extends State<SleepDataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sleep Data'),
+        title: const Text('Sleep Data'),
       ),
       body: ListView.builder(
         itemCount: _sleepLogs.length,
@@ -75,11 +76,11 @@ class _SleepDataPageState extends State<SleepDataPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit),
+                    icon: const Icon(Icons.edit),
                     onPressed: () => _editSleepLog(sleepLog),
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed: () => _deleteSleepLog(sleepLog['id']),
                   ),
                 ],

@@ -1,18 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'home_page.dart';
-import 'poop_data_page.dart';
-import 'medicine_data_page.dart';
-import 'food_data_page.dart';
-import 'journal_data_page.dart';
-import 'sleep_data_page.dart';
-import 'mood_data_page.dart';
-import 'thought_data_page.dart';
+import 'poop/poop_data_page.dart';
+import 'medicine/medicine_data_page.dart';
+import 'food/food_data_page.dart';
+import 'journal/journal_data_page.dart';
+import 'sleep/sleep_data_page.dart';
+import 'mood/mood_data_page.dart';
+import 'thought/thought_data_page.dart';
 import 'database_helper.dart';
 import 'dart:io';
 
@@ -22,7 +20,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Request necessary permissions
   await requestPermissions();
-
+    
+  
 
   // Initialize the appropriate database factory
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
@@ -35,8 +34,11 @@ void main() async {
   }
 
   _setupLogging();
+  // init database
+  DatabaseHelper dbHelper = DatabaseHelper();
+  dbHelper.initDatabase();
   // Run your Flutter app
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 Future<void> requestPermissions() async {
@@ -72,6 +74,8 @@ void _setupLogging() {
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
   _MyAppState createState() => _MyAppState();
 }
@@ -108,15 +112,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: BodyDataHomePage(),
+      home: const BodyDataHomePage(),
       routes: {
-        '/poopData': (context) => PoopDataPage(),
-        '/medicineData': (context) => MedicineDataPage(),
-        '/journalData': (context) => JournalDataPage(),
-        '/foodData': (context) => FoodDataPage(),
-        '/moodData': (context) => MoodDataPage(),
-        '/sleepData': (context) => SleepDataPage(),
-        '/thoughtData': (context) => ThoughtDataPage(),
+        '/poopData': (context) => const PoopDataPage(),
+        '/medicineData': (context) => const MedicineDataPage(),
+        '/journalData': (context) => const JournalDataPage(),
+        '/foodData': (context) => const FoodDataPage(),
+        '/moodData': (context) => const MoodDataPage(),
+        '/sleepData': (context) => const SleepDataPage(),
+        '/thoughtData': (context) => const ThoughtDataPage(),
       },
     );
   }
