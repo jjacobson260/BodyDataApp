@@ -1,9 +1,17 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+
+import 'package:body_data_app/models/medicine.dart';
+import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:logging/logging.dart';
-import 'package:intl/intl.dart';
-import 'ingredient.dart';
+import 'models/poop.dart';
+import 'models/food.dart';
+import 'models/mood.dart';
+import 'models/journal.dart';
+import 'models/thought.dart';
+import 'models/sleep.dart';
+import 'models/ingredient.dart';
+import 'models/recipe.dart';
+import 'models/export.dart';
 
 
 class DatabaseHelper {
@@ -11,576 +19,1298 @@ class DatabaseHelper {
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
 
-  static Database? _database;
+  late final Isar db;
+  
+  
+  
 
   // Create a logger instance for the DatabaseHelper class
   final Logger _logger = Logger('DatabaseHelper');
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+  void initDatabase() async {
+    final directory = await getApplicationDocumentsDirectory();
+    db = await Isar.open([PoopSchema, 
+                          MedicineSchema,
+                          FoodSchema,
+                          MoodSchema,
+                          JournalSchema,
+                          ThoughtSchema,
+                          SleepSchema,
+                          IngredientSchema,
+                          RecipeSchema,
+                          ExportSchema],
+                          directory: directory.path);
   }
 
-  Future<Database> _initDatabase() async {
-    var documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'body_data.db');
-
-    _logger.info('Opening database at path: $path');
-
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        _logger.info('Creating database tables');
-
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS poop_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            bristol_rating INTEGER,
-            urgency INTEGER,
-            blood BOOLEAN
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS medicine_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            medicine_name TEXT,
-            dosage TEXT,
-            unit TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS food_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            description TEXT,
-            image_path TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS mood_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            rating INTEGER,
-            moods TEXT,
-            note TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS journal_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            entry TEXT,
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS export_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            export_type TEXT,
-            last_export TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS sleep_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            sleep_time TEXT,
-            wake_time TEXT,
-            dream_log TEXT,
-            STILL_ASLEEP INTEGER
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS thought_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            start_time TEXT,
-            end_time TEXT,
-            length INTEGER,
-            depth INTEGER,
-            thought_log TEXT,
-            STILL_THINKING INT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS ingredients (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            created_at TEXT,
-            last_used TEXT,
-            name TEXT,
-            category TEXT,
-            icon TEXT
-          )
-        ''');
-      },
-    );
+  Future<List<dynamic>> getAllFromTable(String tableName) async {
+    try {
+      final dataList = await getFunctionForTable(tableName).call();
+      _logger.info('Querying all $tableName data');
+      return dataList;
+    } catch (e) {
+      _logger.severe('Error getting all data from table: $tableName \nerror:$e');
+      return [];
+    } finally {
+      await db.close();
+    }
   }
 
-  Future<int> insertPoopData(Map<String, dynamic> data) async {
-    final db = await database;
-    int id = await db.insert('poop_data', data);
-    _logger.info('Inserted poop data with id: $id');
-    return id;
+  Future<List<dynamic>> getAllFromTableSinceDate<T>(String tableName, DateTime date) async {
+    try {
+      final collection = db.collection<T>();
+
+      // Assuming that the collection has a field named 'timestamp'
+      final dataList = await getDataSinceDateForTable(tableName, date);
+      _logger.info('Querying all $T data since $date');
+      return dataList;
+    } catch (e) {
+      _logger.severe('Error getting data since $date from collection: $T \nerror:$e');
+      return [];
+    } finally {
+      await db.close();
+    }
   }
 
-  Future<int> updatePoopData(int id, Map<String, dynamic> newData) async {
-    final db = await database;
-    _logger.info('Updating poop data with id: $id with newData: $newData');
-    return await db.update(
-      'poop_data',
-      newData,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  Future<List<Map<String, dynamic>>> getAllFromTableSinceDateAsMap<T>(String tableName, DateTime date) async {
+    try {
+      final collection = db.collection<T>();
+
+      // Assuming that the collection has a field named 'timestamp'
+      final dataList = await getDataSinceDateAsMapForTable(tableName, date);
+      _logger.info('Querying all $T data since $date');
+      return dataList;
+    } catch (e) {
+      _logger.severe('Error getting data since $date from collection: $T \nerror:$e');
+      return [];
+    } finally {
+      await db.close();
+    }
   }
 
-  Future<int> deletePoopData(int id) async {
-    final db = await database;
-    _logger.info('Deleting poop data with id: $id');
-    return await db.delete(
-      'poop_data',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  Future<dynamic> getDataSinceDateForTable(String tableName, DateTime date) async {
+    var tablename = tableName.toLowerCase();
+    switch (tablename) {
+      case 'poops':
+        return db.poops.where().filter().timestampGreaterThan(date).findAll();
+      case 'medicines':
+        return db.medicines.where().filter().timestampGreaterThan(date).findAll();
+      case 'foods':
+        return db.foods.where().filter().timestampGreaterThan(date).findAll();
+      case 'moods':
+        return db.moods.where().filter().timestampGreaterThan(date).findAll();
+      case 'journals':
+        return db.journals.where().filter().timestampGreaterThan(date).findAll();
+      case 'thoughts':
+        return db.thoughts.where().filter().timestampGreaterThan(date).findAll();
+      case 'sleeps':
+        return db.sleeps.where().filter().timestampGreaterThan(date).findAll();
+      case 'ingredients':
+        return db.ingredients.where().filter().timestampGreaterThan(date).findAll();
+      case 'recipes':
+        return db.recipes.where().filter().timestampGreaterThan(date).findAll();
+      case 'exports':
+        return db.exports.where().filter().timestampGreaterThan(date).findAll();
+      default:
+        throw Exception('Invalid table name: $tableName');
+    }
   }
 
-  Future<List<Map<String, dynamic>>> getPoopData() async {
-    final db = await database;
-    _logger.info('Querying all poop data');
-    return await db.query('poop_data');
+  Future<List<Map<String, dynamic>>> getAllDataFromTableAsMap(String tableName) async {
+    var tablename = tableName.toLowerCase();
+    switch (tablename) {
+      case 'poops':
+        return getPoopDataAsMap();
+      case 'medicines':
+        return getMedicineDataAsMap();
+      case 'foods':
+        return getFoodDataAsMap();
+      case 'moods':
+        return getMoodDataAsMap();
+      case 'journals':
+        return getJournalDataAsMap();
+      case 'thoughts':
+        return getThoughtDataAsMap();
+      case 'sleeps':
+        return getSleepDataAsMap();
+      case 'ingredients':
+        return getIngredientDataAsMap();
+      case 'recipes':
+        return getRecipeDataAsMap();
+      case 'exports':
+        return getExportDataAsMap();
+      default:
+        throw Exception('Invalid table name: $tableName');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getDataSinceDateAsMapForTable(String tableName, DateTime date) async {
+    var tablename = tableName.toLowerCase();
+    switch (tablename) {
+      case 'poops':
+        return getPoopDataSinceDateAsMap(date);
+      case 'medicines':
+        return getMedicineDataSinceDateAsMap(date);
+      case 'foods':
+        return getFoodDataSinceDateAsMap(date);
+      case 'moods':
+        return getMoodDataSinceDateAsMap(date);
+      case 'journals':
+        return getJournalDataSinceDateAsMap(date);
+      case 'thoughts':
+        return getThoughtDataSinceDateAsMap(date);
+      case 'sleeps':
+        return getSleepDataSinceDateAsMap(date);
+      case 'ingredients':
+        return getIngredientDataSinceDateAsMap(date);
+      case 'recipes':
+        return getRecipeDataSinceDateAsMap(date);
+      case 'exports':
+        return getExportDataSinceDateAsMap(date);
+      default:
+        throw Exception('Invalid table name: $tableName');
+    }
+  }
+
+  Future<dynamic> Function() getFunctionForTable(String tableName) {
+    switch (tableName) {
+      case 'Poops':
+        return db.poops.where().findAll;
+      case 'Medicines':
+        return db.medicines.where().findAll;
+      case 'Foods':
+        return db.foods.where().findAll;
+      case 'Moods':
+        return db.moods.where().findAll;
+      case 'Journals':
+        return db.journals.where().findAll;
+      case 'Thoughts':
+        return db.thoughts.where().findAll;
+      case 'Sleeps':
+        return db.sleeps.where().findAll;
+      case 'Ingredients':
+        return db.ingredients.where().findAll;
+      case 'Recipes':
+        return db.recipes.where().findAll;
+      case 'Exports':
+        return db.exports.where().findAll;
+      default:
+        throw Exception('Invalid table name: $tableName');
+    }
+  }
+
+  CollectionSchema getCollectionSchema(String tableName) {
+    switch (tableName) {
+      case 'Poops':
+        return PoopSchema;
+      case 'Medicines':
+        return MedicineSchema;
+      case 'Foods':
+        return FoodSchema;
+      case 'Moods':
+        return MoodSchema;
+      case 'Journals':
+        return JournalSchema;
+      case 'Thoughts':
+        return ThoughtSchema;
+      case 'Sleeps':
+        return SleepSchema;
+      case 'Ingredients':
+        return IngredientSchema;
+      case 'Recipes':
+        return RecipeSchema;
+      case 'Exports':
+        return ExportSchema;
+      default:
+        throw Exception('Invalid table name: $tableName');
+    }
+  }
+
+  Future<int> insertPoopData(Poop data) async {
+    try {
+      int id = -1;
+      db.writeTxn(() async {
+        id = await db.poops.put(data); // insert & update
+        _logger.info('Inserted poop data with id: $id');
+      });
+      
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting poop with data: $data \nerror: $e');
+      return -1;
+    }
+  }
+
+  Future<Null> updatePoopData(Poop data) async {
+    try {
+      
+      db.writeTxn(() async {
+        await db.poops.put(data); // insert & update
+      });
+      _logger.info('Updated poop data with id: ${data.id}');
+    } catch (e) {
+      _logger.severe('Error updating poop with data: $data \nerror: $e');
+    }
+    
+  }
+
+  Future<bool> deletePoopData(int id) async {
+    try {
+      _logger.info('Deleting poop data with id: $id');
+      final success = await db.poops.delete(id);
+      return success;
+    } catch (e) {
+      _logger.severe('Error deleting poop with id: $id \nerror: $e');
+      return false;
+    }
+  }
+
+  Future<List<Poop>> getPoopData() async {
+    try {
+      final poopDataList = await db.poops.where().findAll();
+      _logger.info('Querying all poop data');
+      return poopDataList;
+    } catch (e) {
+      _logger.severe('Error getting poops \nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getPoopDataAsMap() async {
+    try { 
+      final poopDataList = await db.poops.where().findAll();
+      _logger.info('Querying all poop data');
+      final poopDataMapList = poopDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'bristolRating': object.bristolRating,
+          'urgency': object.urgency,
+          'blood': object.blood,
+          'image_path': object.imagePath,
+          'location': object.location
+        };
+      }).toList();
+      return poopDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting poops as map \nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getPoopDataSinceDateAsMap(DateTime date) async {
+    try { 
+      final poopDataList = await db.poops.where().filter().timestampGreaterThan(date).findAll();
+      _logger.info('Querying all poop data');
+      final poopDataMapList = poopDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'bristolRating': object.bristolRating,
+          'urgency': object.urgency,
+          'blood': object.blood,
+          'image_path': object.imagePath,
+          'location': object.location
+        };
+      }).toList();
+      return poopDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting poops as map \nerror: $e');
+      return [];
+    }
   }
 
   Future<double> getAverageBristolRatingForDays(int days) async {
-    final db = await database;
-    final now = DateTime.now();
-    final pastDate = now.subtract(Duration(days: days));
-    final pastDateStr = pastDate.toIso8601String();
-
-    final result = await db.rawQuery(
-      'SELECT AVG(bristol_rating) as avg_rating FROM poop_data WHERE timestamp >= ?',
-      [pastDateStr],
-    );
-    _logger.info('Got average bristol rating of: $result');
-    if (result.isNotEmpty && result.first['avg_rating'] != null) {
-      return result.first['avg_rating'] as double;
-    } else {
-      return 0.0;
+    try {
+      final now = DateTime.now();
+      final pastDate = now.subtract(Duration(days: days));
+      // get average rating
+      final result = await db.poops.where().filter().timestampGreaterThan(pastDate).bristolRatingProperty().average();
+      _logger.info('Got average bristol rating of: $result');
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting average bristol rating for days: $days \nerror: $e');
+      return -1;
     }
   }
 
   Future<double> getAverageUrgencyForDays(int days) async {
-    final db = await database;
-    final now = DateTime.now();
-    final pastDate = now.subtract(Duration(days: days));
-    final pastDateStr = pastDate.toIso8601String();
-
-    final result = await db.rawQuery(
-      'SELECT AVG(urgency) as avg_urgency FROM poop_data WHERE timestamp >= ?',
-      [pastDateStr],
-    );
-    _logger.info('Got average urgency of: $result');
-    if (result.isNotEmpty && result.first['avg_urgency'] != null) {
-      return result.first['avg_urgency'] as double;
-    } else {
-      return 0.0;
+    try {
+      final now = DateTime.now();
+      final pastDate = now.subtract(Duration(days: days));
+      // get average rating
+      final result = await db.poops.where().filter().timestampGreaterThan(pastDate).urgencyProperty().average();
+      _logger.info('Got average urgency of: $result');
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting average urgency for days: $days \nerror: $e');
+      return -1;
     }
   }
 
   Future<int> getBMCountForDays(int days) async {
-    final db = await database;
-    final now = DateTime.now();
-    final pastDate = now.subtract(Duration(days: days));
-    final pastDateStr = pastDate.toIso8601String();
+    try {
+      final now = DateTime.now();
+      final pastDate = now.subtract(Duration(days: days));
 
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM poop_data WHERE timestamp >= ?',
-      [pastDateStr],
-    );
-    _logger.info('Got BM count of: $result');
-    if (result.isNotEmpty && result.first['count'] != null) {
-      return result.first['count'] as int;
-    } else {
-      return 0;
+      final result = await db.poops.where().filter().timestampGreaterThan(pastDate).count();
+      _logger.info('Got BM count of: $result');
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting bm count for days: $days \nerror: $e');
+      return -1;
     }
   }
 
-  Future<int> insertMedicineData(Map<String, dynamic> data) async {
-    final db = await database;
-    int id = await db.insert('medicine_data', data);
-    _logger.info('Inserted medicine data with id: $id');
-    return id;
-  }
-
-  Future<int> updateMedicineData(int id, Map<String, dynamic> newData) async {
-    final db = await database;
-    _logger.info('Updating medicine data with id: $id with newData: $newData');
-    return await db.update(
-      'medicine_data',
-      newData,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<int> deleteMedicineData(int id) async {
-    final db = await database;
-    _logger.info('Deleting medicine data with id: $id');
-    return await db.delete(
-      'medicine_data',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<Map<String, String?>> getMedicineDetails(String medicineName) async {
-    final db = await database;
-    _logger.info('Querying medicine details for: $medicineName');
-    
-    List<Map<String, dynamic>> result = await db.query(
-      'medicine_data',
-      columns: ['dosage', 'unit'],
-      where: 'medicine_name = ?',
-      whereArgs: [medicineName],
-      orderBy: 'timestamp ASC',
-      limit: 1,
-    );
-
-    if (result.isNotEmpty) {
-      _logger.info('Found medicine details for: $medicineName');
-      return {
-        'dosage': result.first['dosage'] as String?,
-        'unit': result.first['unit'] as String?,
-      };
-    } else {
-      _logger.info('No medicine details found for: $medicineName');
+  Future<int> insertMedicineData(Medicine data) async {
+    try {
+      int id = -1;
+      db.writeTxn(() async {
+        id = await db.medicines.put(data); // insert & update
+      });
+      _logger.info('Inserted medicine data with id: $id');
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting medicine data \nerror: $e');
+      return -1;
     }
+  }
 
-    return {'dosage': null, 'unit': null};
+  Future<void> updateMedicineData(Medicine data) async {
+    try {
+      db.writeTxn(() async {
+        await db.medicines.put(data); // insert & update
+      });
+      _logger.info('Updated medicine data with id: ${data.id} with data: $data');
+    } catch (e) {
+      _logger.severe('Error updating medicine data \nerror: $e');
+    }
+  }
+
+  Future<List<Medicine>> getMedicineData() async {
+    try{
+      final medicineDataList = await db.medicines.where().findAll();
+      _logger.info('Querying all medicine data');
+      return medicineDataList;
+    } catch (e) {
+      _logger.severe('Error getting medicine data \nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getMedicineDataAsMap() async {
+    try {
+      final medicineDataList = await db.medicines.where().findAll();
+      _logger.info('Querying all medicine data');
+      final medicineDataMapList = medicineDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'name': object.name,
+          'dosage': object.dosage,
+          'unit': object.unit
+        };
+      }).toList();
+      return medicineDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting medicine data as map\nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getMedicineDataSinceDateAsMap(DateTime date) async {
+    try {
+      final medicineDataList = await db.medicines.where().filter().timestampGreaterThan(date).findAll();
+      _logger.info('Querying all medicine data');
+      final medicineDataMapList = medicineDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'name': object.name,
+          'dosage': object.dosage,
+          'unit': object.unit
+        };
+      }).toList();
+      return medicineDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting medicine data as map\nerror: $e');
+      return [];
+    }
+  }
+
+  Future<bool> deleteMedicineData(int id) async {
+    try {
+      _logger.info('Deleting medicine data with id: $id');
+      final success = await db.medicines.delete(id);
+      return success;
+    } catch (e) {
+      _logger.severe('Error deleting medicine data with id: $id\nerror: $e');
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> getMedicineDetails(String medicineName) async {
+    try {
+      _logger.info('Querying medicine details for: $medicineName');
+      // this should only return 1
+      final resultList = await db.medicines.where().nameEqualTo(medicineName).findAll();
+      final result = resultList[0];
+
+      return {'dosage': result.dosage, 'unit': result.unit};
+    } catch (e) {
+      _logger.severe('Error getting medicine details for medicine: $medicineName\nerror: $e');
+      return {};
+    }
   }
 
   Future<List<String>> getMedicineUnits() async {
-    final db = await database;
-    _logger.info('Querying distinct medicine units');
+    try {
+      _logger.info('Querying distinct medicine units');
+      final result = await db.medicines.where().distinctByUnit().findAll();
+      List<String> medicineUnits = result.map((e) => e.unit).toList();
 
-    var result = await db.rawQuery('SELECT DISTINCT unit FROM medicine_data');
-    List<String> medicineUnits = result.map((e) => e['unit'] as String).toList();
+      _logger.info('Found ${medicineUnits.length} distinct medicine units');
 
-    _logger.info('Found ${medicineUnits.length} distinct medicine units');
-
-    return medicineUnits;
-  }
-
-  
-
-  Future<List<Map<String, dynamic>>> getMedicineData() async {
-    final db = await database;
-    _logger.info('Querying all medicine data');
-    return await db.query('medicine_data', orderBy: 'timestamp DESC');
+      return medicineUnits;
+    } catch (e) {
+      _logger.severe('Error getting medicine units\nerror: $e');
+      return [];
+    }
   }
 
   Future<List<String>> getMedicineNames() async {
-    final db = await database;
-    _logger.info('Querying distinct medicine names');
+    try {
+      _logger.info('Querying distinct medicine names');
+      var result = await db.medicines.where().distinctByName().findAll();
+      List<String> medicineNames = result.map((e) => e.name).toList();
 
-    var result = await db.rawQuery('SELECT DISTINCT medicine_name FROM medicine_data');
-    List<String> medicineNames = result.map((e) => e['medicine_name'] as String).toList();
+      _logger.info('Found ${medicineNames.length} distinct medicine names');
 
-    _logger.info('Found ${medicineNames.length} distinct medicine names');
-
-    return medicineNames;
+      return medicineNames;
+    } catch (e) {
+      _logger.severe('Error getting medicine names\nerror: $e');
+      return [];
+    }
   }
 
-  Future<void> insertFoodData(Map<String, dynamic> foodData) async {
-    final db = await database;
-    await db.insert('food_data', foodData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted food data');
+  Future<int> insertFoodData(Food data) async {
+    try{
+      var id = -1;
+      db.writeTxn(() async {
+        id = await db.foods.put(data); // insert & update
+      });
+      _logger.info('Inserted food data with id: $id');
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting food data: $data\nerror: $e');
+      return -1;
+    }
   }
 
-  Future<List<Map<String, dynamic>>> getFoodData() async {
-    final db = await database;
-    _logger.info('Querying all food data');
-    return await db.query('food_data', orderBy: 'timestamp DESC');
+  Future<void> updateFoodData(Food data) async {
+    try{
+      var id = -1;
+      db.writeTxn(() async {
+        await db.foods.put(data); // insert & update
+      });
+      _logger.info('Inserted food data with id: ${data.id}');
+    } catch (e) {
+      _logger.severe('Error updating food data: $data\nerror: $e');
+    }
   }
 
-  Future<void> insertMoodData(Map<String, dynamic> moodData) async {
-    final db = await database;
-    _logger.info('Initializing database');
-    await _initDatabase();
-    await db.execute('''
-          CREATE TABLE IF NOT EXISTS mood_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            rating INTEGER,
-            moods TEXT,
-            note TEXT
-          )
-        ''');
-    await db.insert('mood_data', moodData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted mood data');
+  Future<List<Food>> getFoodData() async {
+    try {
+      _logger.info('Querying all food data');
+      final foodDataList = await db.foods.where().findAll();
+
+      return foodDataList;
+    } catch (e) {
+      _logger.severe('Error getting food data\nerror: $e');
+      return [];
+    }
   }
 
-  Future<List<Map<String, dynamic>>> getMoodData() async {
-    final db = await database;
-    _logger.info('Querying all mood data');
-    return await db.query('mood_data', orderBy: 'timestamp DESC');
+  Future<bool> deleteFoodData(int id) async {
+    try {
+      _logger.info('Deleting food data with id: $id');
+      final success = await db.foods.delete(id);
+      return success;
+    } catch (e) {
+      _logger.severe('Error deleting food data: $id\nerror: $e');
+      return false;
+    }
   }
 
-  Future<void> insertJournalData(Map<String, dynamic> journalData) async {
-    final db = await database;
-    await db.insert('journal_data', journalData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted journal data');
+  Future<List<Map<String, dynamic>>> getFoodDataAsMap() async {
+    try {
+      final foodDataList = await db.foods.where().findAll();
+      _logger.info('Querying all food data');
+      final foodDataMapList = foodDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'description': object.description,
+          'ingredients_json': object.ingredients_json,
+          'recipe_id': object.recipe_id,
+          'image_path': object.image_path,
+          'location': object.location
+        };
+      }).toList();
+      return foodDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting food data as map\nerror: $e');
+      return [];
+    }
   }
 
-  Future<List<Map<String, dynamic>>> getJournalData() async {
-    final db = await database;
-    _logger.info('Querying all journal data');
-    return await db.query('journal_data', orderBy: 'timestamp DESC');
+  Future<List<Map<String, dynamic>>> getFoodDataSinceDateAsMap(DateTime date) async {
+    try {
+      final foodDataList = await db.foods.where().filter().timestampGreaterThan(date).findAll();
+      _logger.info('Querying all food data');
+      final foodDataMapList = foodDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'description': object.description,
+          'ingredients_json': object.ingredients_json,
+          'recipe_id': object.recipe_id,
+          'image_path': object.image_path,
+          'location': object.location
+        };
+      }).toList();
+      return foodDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting food data as map\nerror: $e');
+      return [];
+    }
   }
 
-  Future<void> insertSleepData(Map<String, dynamic> sleepData) async {
-    final db = await database;
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS sleep_data (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT,
-        sleep_time TEXT,
-        wake_time TEXT,
-        dream_log TEXT,
-        STILL_ASLEEP INTEGER
-      )
-    ''');
-    await db.insert('sleep_data', sleepData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted sleep data');
+  Future<int> insertMoodData(Mood data) async {
+    try {
+      var id = -1;
+      db.writeTxn(() async {
+        id = await db.moods.put(data); // insert & update
+      });
+      _logger.info('Inserted mood data with id: $id');
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting mood data: $data\nerror: $e');
+      return -1;
+    }
+  }
+  
+  Future<void> updateMoodData(Mood data) async {
+    try {
+      db.writeTxn(() async {
+        await db.moods.put(data); // insert & update
+      });
+      _logger.info('Updated mood data with id: ${data.id}');
+    } catch (e) {
+      _logger.severe('Error updating mood data: $data\nerror: $e');
+    }
   }
 
-  Future<void> updateSleepData(int id, Map<String, dynamic> newData) async {
-    final db = await database;
-    await db.update(
-      'sleep_data',
-      newData,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    _logger.info('Updated sleep data with id: $id with newData: $newData');
+  Future<List<Mood>> getMoodData() async {
+    try{
+      _logger.info('Querying all mood data');
+      final moodDataList = await db.moods.where().findAll();
+
+      return moodDataList;
+    } catch (e) {
+      _logger.severe('Error getting mood data\nerror: $e');
+      return [];
+    }
   }
 
-  Future<int> deleteSleepData(int id) async {
-    final db = await database;
-    _logger.info('Deleted sleep data with id: $id');
-    return await db.delete(
-      'sleep_data',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    
+  Future<List<Map<String, dynamic>>> getMoodDataAsMap() async {
+    try {
+      final moodDataList = await db.moods.where().findAll();
+      _logger.info('Querying all mood data');
+      final moodDataMapList = moodDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'rating': object.rating,
+          'moods_json': object.moods_json,
+          'note': object.note,
+          'location': object.location
+        };
+      }).toList();
+      return moodDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting mood data as map\nerror: $e');
+      return [];
+    }
   }
 
-  Future<Map<String, dynamic>?> getStillAsleepEntry() async {
-    final db = await database;
-    final result = await db.query(
-      'sleep_data',
-      where: 'STILL_ASLEEP = ?',
-      whereArgs: [1],
-      orderBy: 'id DESC',
-      limit: 1,
-    );
-    if (result.isNotEmpty) {
-      return result.first;
+  Future<List<Map<String, dynamic>>> getMoodDataSinceDateAsMap(DateTime date) async {
+    try {
+      final moodDataList = await db.moods.where().filter().timestampGreaterThan(date).findAll();
+      _logger.info('Querying all mood data');
+      final moodDataMapList = moodDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'rating': object.rating,
+          'moods_json': object.moods_json,
+          'note': object.note,
+          'location': object.location
+        };
+      }).toList();
+      return moodDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting mood data as map\nerror: $e');
+      return [];
+    }
+  }
+
+  Future<bool> deleteMoodData(int id) async {
+    try {
+      _logger.info('Deleting mood data with id: $id');
+      final success = await db.moods.delete(id);
+      return success;
+    } catch (e) {
+      _logger.severe('Error deleting mood data: $id\nerror: $e');
+      return false;
+    }
+  }
+
+  Future<int> insertJournalData(Journal data) async {
+    try {
+      var id = -1;
+      db.writeTxn(() async {
+        id = await db.journals.put(data); // insert & update
+      });
+      _logger.info('Inserted journal data with id: $id');
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting journal data: $data\nerror: $e');
+      return -1;
+    }
+  }
+
+  Future<void> updateJournalData(Journal data) async {
+    try {
+      db.writeTxn(() async {
+        await db.journals.put(data); // insert & update
+      });
+      _logger.info('Updated journal data with id: ${data.id}');
+    } catch (e) {
+      _logger.severe('Error updating journal data: $data\nerror: $e');
+    }
+  }
+
+  Future<List<Journal>> getJournalData() async {
+    try {
+      _logger.info('Querying all journal data');
+      final journalDataList = await db.journals.where().findAll();
+
+      return journalDataList;
+    } catch (e) {
+      _logger.severe('Error getting journal data\nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getJournalDataAsMap() async {
+    try {
+      final journalDataList = await db.journals.where().findAll();
+      _logger.info('Querying all journal data');
+      final journalDataMapList = journalDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'entry': object.entry,
+          'image_path': object.image_path,
+          'location': object.location
+        };
+      }).toList();
+      return journalDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting journal data as map\nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getJournalDataSinceDateAsMap(DateTime date) async {
+    try {
+      final journalDataList = await db.journals.where().filter().timestampGreaterThan(date).findAll();
+      _logger.info('Querying all journal data');
+      final journalDataMapList = journalDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'entry': object.entry,
+          'image_path': object.image_path,
+          'location': object.location
+        };
+      }).toList();
+      return journalDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting journal data as map\nerror: $e');
+      return [];
+    }
+  }
+
+  Future<bool> deleteJournalData(int id) async {
+    try{
+      _logger.info('Deleting journal data with id: $id');
+      final success = await db.journals.delete(id);
+      return success;
+    } catch (e) {
+      _logger.severe('Error deleting journal data: $id\nerror: $e');
+      return false;
+    }
+  }
+
+  Future<int> insertThoughtData(Thought data) async {
+    try {
+      var id = 0;
+      db.writeTxn(() async {
+        id = await db.thoughts.put(data); // insert & update
+        _logger.info('Inserted thought data with id: $id');
+      });
+      
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting thought data: $data\nerror: $e');
+      return -1;
+    }
+  }
+
+  Future<void> updateThoughtData(Thought data) async {
+    try {
+      db.writeTxn(() async {
+        await db.thoughts.put(data); // insert & update
+      });
+      _logger.info('Updated thought data with id: ${data.id}');
+    } catch (e) {
+      _logger.severe('Error updating thought data: $data \nerror: $e');
+    }
+  }
+
+  Future<List<Thought>> getThoughtData() async {
+    try {
+      _logger.info('Querying all thought data');
+      final thoughtDataList = await db.thoughts.where().findAll();
+
+      return thoughtDataList;
+    } catch (e) {
+      _logger.severe('Error getting thought data \nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getThoughtDataAsMap() async {
+    try {
+      final thoughtDataList = await db.thoughts.where().findAll();
+      _logger.info('Querying all thought data');
+      final thoughtDataMapList = thoughtDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'thought_log': object.thought_log,
+          'start_time': object.start_time,
+          'end_time': object.end_time,
+          'length': object.length,
+          'depth': object.depth,
+          'location': object.location,
+          'STILL_THINKING': object.STILL_THINKING
+        };
+      }).toList();
+      return thoughtDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting thought data as map \nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getThoughtDataSinceDateAsMap(DateTime date) async {
+    try {
+      final thoughtDataList = await db.thoughts.where().filter().end_timeGreaterThan(date).findAll();
+      _logger.info('Querying all thought data');
+      final thoughtDataMapList = thoughtDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'thought_log': object.thought_log,
+          'start_time': object.start_time,
+          'end_time': object.end_time,
+          'length': object.length,
+          'depth': object.depth,
+          'location': object.location,
+          'STILL_THINKING': object.STILL_THINKING
+        };
+      }).toList();
+      return thoughtDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting thought data as map \nerror: $e');
+      return [];
+    }
+  }
+
+  Future<bool> deleteThoughtData(int id) async {
+    try {
+      _logger.info('Deleting thought data with id: $id');
+      final success = await db.thoughts.delete(id);
+      return success;
+    } catch (e) {
+      _logger.severe('Error deleting thought: $id \nerror: $e');
+      return false;
+    }
+  }
+
+  Future<int> getMaxThoughtLogId() async {
+    try {
+      
+      _logger.info('Querying max sleep log id');
+      final maxId = await db.thoughts.where().idProperty().max();
+
+      _logger.info('Got max id: $maxId');
+      return maxId ?? 0;  // Return 0 if maxId is null
+    } catch (e) {
+      _logger.severe('Error querying max sleep log id: $e');
+      return 0;  // Return 0 in case of error
+    }
+
+  }
+
+  Future<Thought?> getStillThinkingEntry() async {
+    try {
+      final result = await db.thoughts.where().filter().sTILL_THINKINGEqualTo(true).findFirst();
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting still thinking entry \nerror: $e');
+      return null;
+    }
+  }
+
+  Future<int> insertSleepData(Sleep data) async {
+    try { 
+      var id = -1;
+      db.writeTxn(() async {
+        id = await db.sleeps.put(data); // insert & update
+      });
+      _logger.info('Inserted sleep data with id: $id');
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting sleep data: $data \nerror: $e');
+      return -1;
+    }
+  }
+
+  Future<void> updateSleepData(Sleep data) async {
+    try {
+      db.writeTxn(() async {
+        await db.sleeps.put(data); // insert & update
+      });
+      _logger.info('Updated sleep data with id: ${data.id}');
+    } catch (e) {
+      _logger.severe('Error updating sleep data: $data \nerror: $e');
+    }
+  }
+
+  Future<List<Sleep>> getSleepData() async {
+    try {
+      _logger.info('Querying all sleep data');
+      final sleepDataList = await db.sleeps.where().findAll();
+
+      return sleepDataList;
+    } catch (e) {
+      _logger.severe('Error getting sleep data \nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSleepDataAsMap() async {
+    try {
+      final sleepDataList = await db.sleeps.where().findAll();
+      _logger.info('Querying all sleep data');
+      final sleepDataMapList = sleepDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'sleep_time': object.sleep_time,
+          'wake_time': object.wake_time,
+          'dream_log': object.dream_log,
+          'location': object.location,
+          'STILL_ASLEEP': object.STILL_ASLEEP
+        };
+      }).toList();
+      return sleepDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting sleep data as map \nerror: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSleepDataSinceDateAsMap(DateTime date) async {
+    try {
+      final sleepDataList = await db.sleeps.where().filter().timestampGreaterThan(date).findAll();
+      _logger.info('Querying all sleep data');
+      final sleepDataMapList = sleepDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'sleep_time': object.sleep_time,
+          'wake_time': object.wake_time,
+          'dream_log': object.dream_log,
+          'location': object.location,
+          'STILL_ASLEEP': object.STILL_ASLEEP
+        };
+      }).toList();
+      return sleepDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting sleep data as map \nerror: $e');
+      return [];
+    }
+  }
+
+  Future<bool> deleteSleepData(int id) async {
+    try {
+      _logger.info('Deleting sleep data with id: $id');
+      final success = await db.sleeps.delete(id);
+      return success;
+    } catch (e) {
+      _logger.severe('Error deleting sleep data: $id \nerror: $e');
+      return false;
+    }
+  }
+
+  Future<Sleep?> getStillAsleepEntry() async {
+    try {
+      final result = await db.sleeps.where().filter().sTILL_ASLEEPEqualTo(true).findFirst();
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting still asleep entry \nerror: $e');
     }
     return null;
   }
 
   Future<int> getMaxSleepLogId() async {
-    final db = await database;
-    final List<Map<String, dynamic>> result = await db.rawQuery('SELECT MAX(id) as max_id FROM sleep_data');
-    final max_id = result.first['max_id'] as int;
-    _logger.info('Got max id: $max_id');
-    return max_id;
+    try {
+      
+      _logger.info('Querying max sleep log id');
+      final maxId = await db.sleeps.where().idProperty().max();
 
-  }
-
-  Future<void> insertThoughtData(Map<String, dynamic> thoughtData) async {
-    final db = await database;
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS sleep_data (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT,
-        length INTEGER,
-        depth INTEGER,
-        thought_log TEXT,
-        STILL_THINKING INT
-      )
-    ''');
-    await db.insert('thought_data', thoughtData, conflictAlgorithm: ConflictAlgorithm.replace);
-    _logger.info('Inserted thought data');
-  }
-
-  Future<int> updateThoughtData(int id, Map<String, dynamic> newData) async {
-    final db = await database;
-    _logger.info('Updated thought data with id: $id with newData: $newData');
-    return await db.update(
-      'thought_data',
-      newData,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> getThoughtData() async {
-    final db = await database;
-    _logger.info('Querying all thought data');
-    return await db.query('thought_data', orderBy: 'timestamp ASC');
-  }
-
-  Future<int> deleteThoughtData(int id) async {
-    final db = await database;
-    _logger.info('Deleted thought data with id: $id');
-    return await db.delete(
-      'thought_data',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<int> getMaxThoughtLogId() async {
-    final db = await database;
-    final List<Map<String, dynamic>> result = await db.rawQuery('SELECT MAX(id) as max_id FROM thought_data');
-    final max_id = result.first['max_id'] as int;
-    _logger.info('Got max id: $max_id');
-    return max_id;
-
-  }
-
-  Future<Map<String, dynamic>?> getStillThinkingEntry() async {
-    final db = await database;
-    final result = await db.query(
-      'thought_data',
-      where: 'STILL_THINKING = ?',
-      whereArgs: [1],
-      orderBy: 'id DESC',
-      limit: 1,
-    );
-    if (result.isNotEmpty) {
-      return result.first;
+      _logger.info('Got max id: $maxId');
+      return maxId ?? 0;  // Return 0 if maxId is null
+    } catch (e) {
+      _logger.severe('Error querying max sleep log id: $e');
+      return 0;  // Return 0 in case of error
     }
-    return null;
+  }
+  
+
+  Future<int> insertIngredient(Ingredient data) async {
+    var id = -1;
+    try {
+      db.writeTxn(() async {
+        id = await db.ingredients.put(data); // insert & update
+      });
+      _logger.info('Inserted sleep data with id: $id');
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting ingredient with data: $data \nerror: $e');
+      return id;
+    }  
   }
 
-  Future<void> insertIngredient(Ingredient ingredient) async {
-    final db = await database;
-    final ingredientData = {
-      'created_at': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
-      'last_used': null,
-      'name': ingredient.name,
-      'category': ingredient.category,
-      'icon': ingredient.icon
-    };
-    await db.insert(
-      'ingredients',
-      ingredientData,
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+  Future<void> updateIngredient(Ingredient data) async {
+    try {
+      db.writeTxn(() async {
+        await db.ingredients.put(data); // insert & update
+      });
+      _logger.info('Updated ingredient data with data: $data');
+    } catch (e) {
+      _logger.severe('Error updating ingredient with data: $data \nerror: $e');
+    }  
   }
 
-  Future<void> updateIngredient(Map<String, dynamic> ingredient) async {
-    final db = await database;
-    await db.update(
-      'ingredients',
-      ingredient,
-      where: 'id = ?',
-      whereArgs: [ingredient['id']],
-    );
+  Future<bool> deleteIngredient(int id) async {
+    try{
+      _logger.info('Deleting ingredient data with id: $id');
+      final success = await db.sleeps.delete(id);
+      return success;
+    }  catch (e) {
+      _logger.severe('Error deleting ingredient with id: $id \nerror: $e');
+      return false;
+    }  
+    
   }
 
-  Future<void> deleteIngredient(int id) async {
-    final db = await database;
-    await db.delete(
-      'ingredients',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  Future<bool> useIngredient(Ingredient ingredient) async {
+    try{
+          ingredient.last_used = DateTime.now();
+      updateIngredient(ingredient);
+      return true;
+    } catch (e) {
+      _logger.severe('Error using ingredient with id: ${ingredient.id} \nerror: $e');
+      return false;
+    }
   }
 
-  Future<void> useIngredient(Ingredient ingredient) async {
-    final db = await database;
-    final updateData = {'last_used': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())};
-    await db.update(
-      'ingredients',
-      updateData,
-      where: 'name = ?',
-      whereArgs: [ingredient.name],
-    );
+  Future<List<Map<String, dynamic>>> getIngredientDataAsMap() async {
+    try {  
+      final ingredientDataList = await db.ingredients.where().findAll();
+      _logger.info('Querying all ingredient data');
+      final ingredientDataMapList = ingredientDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'last_used': object.last_used,
+          'name': object.name,
+          'icon': object.icon,
+          'category': object.category
+        };
+      }).toList();
+      return ingredientDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting ingredients as map \nerror: $e');
+      return [];
+    }
   }
 
-  Future<List<Ingredient>> getAllIngredients() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('ingredients');
+  Future<List<Map<String, dynamic>>> getIngredientDataSinceDateAsMap(DateTime date) async {
+    try {  
+      final ingredientDataList = await db.ingredients.where().filter().timestampGreaterThan(date).findAll();
+      _logger.info('Querying all ingredient data');
+      final ingredientDataMapList = ingredientDataList.map((object) {
+        return {
+          'id': object.id,
+          'timestamp': object.timestamp,
+          'last_used': object.last_used,
+          'name': object.name,
+          'icon': object.icon,
+          'category': object.category
+        };
+      }).toList();
+      return ingredientDataMapList;
+    } catch (e) {
+      _logger.severe('Error getting ingredients as map \nerror: $e');
+      return [];
+    }
+  }
 
-    return List.generate(maps.length, (i) {
-      return Ingredient(
-        name: maps[i]['name'],
-        category: maps[i]['category'],
-        icon: maps[i]['icon'],
-      );
-    });
+  Future<List<Ingredient>> getIngredients() async {
+    try {
+          final result = await db.ingredients.where().findAll();    
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting ingredients\nerror: $e');
+      return [];
+    }  
   }
 
   Future<List<Ingredient>> getIngredientsByRecency() async {
-    final db = await database;
-
-    final List<Map<String, dynamic>> maps = await db.query(
-      'ingredients',
-      orderBy: 'last_used DESC, name ASC',
-    );
-
-    return List.generate(maps.length, (i) {
-      return Ingredient(
-        name: maps[i]['name'],
-        category: maps[i]['category'],
-        icon: maps[i]['icon'],
-      );
-    });
+    try {
+          final result = await db.ingredients.where().sortByTimestampDesc().findAll();    
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting ingredients by recency\nerror: $e');
+      return [];
+    }  
   }
 
   Future<List<Ingredient>> getIngredientsCategoryByRecency(String category) async {
-    final db = await database;
-
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
-      SELECT * FROM ingredients
-      WHERE category = ?
-      ORDER BY last_used DESC, name ASC
-    ''', [category]);
-
-    return List.generate(maps.length, (i) {
-      return Ingredient(
-        name: maps[i]['name'],
-        category: maps[i]['category'],
-        icon: maps[i]['icon'],
-      );
-    });
+    try {
+          final result = await db.ingredients.where().filter().categoryEqualTo(category).sortByTimestampDesc().findAll();    
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting ingredient category by recency\nerror: $e');
+      return [];
+    } 
   }
 
-  Future<List<Ingredient>> getIngredientsByNamePrefix(Database db, String prefix) async {
-    final List<Map<String, dynamic>> maps = await db.query(
-      'ingredients',
-      where: 'name LIKE ?',
-      whereArgs: ['%$prefix%'],
-      orderBy: 'name ASC',
-    );
-  
-    return List.generate(maps.length, (i) {
-      return Ingredient(
-        name: maps[i]['name'],
-        category: maps[i]['category'],
-        icon: maps[i]['icon'],
-      );
-    });
+  Future<List<Ingredient>> getIngredientsByNamePrefix(String prefix) async {
+    try {
+          final ingredients = await db.ingredients
+        .where()
+        .filter()
+        .nameStartsWith(prefix)
+        .sortByName()
+        .findAll();
+      return ingredients;
+    } catch (e) {
+      _logger.severe('Error getting ingredients by name prefix\nerror: $e');
+      return [];
+    }
 
   }
 
+  Future<int> insertRecipe(Recipe data) async {
+        var id = -1;
+    try {
+      db.writeTxn(() async {
+        id = await db.recipes.put(data); // insert & update
+      });
+      _logger.info('Inserted sleep data with id: $id');
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting ingredient with data: $data \nerror: $e');
+      return 0;
+    }  
+  }
 
+  Future<void> updateRecipe(Recipe data) async {
+        var id = -1;
+    try {
+      db.writeTxn(() async {
+        await db.recipes.put(data); // insert & update
+      });
+      _logger.info('Inserted sleep data with id: $id');
+    } catch (e) {
+      _logger.severe('Error updating ingredient with data: $data \nerror: $e');
+    }  
+  }
+
+  Future<bool> deleteRecipe(int id) async {
+    try{
+          _logger.info('Deleting ingredient data with id: $id');
+      final success = await db.sleeps.delete(id);
+      return success;
+    }  catch (e) {
+      _logger.severe('Error deleting ingredient with id: $id \nerror: $e');
+      return false;
+    }  
+    
+  }
+
+  Future<List<Recipe>> getRecipes() async {
+    try {
+          final result = await db.recipes.where().findAll();    
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting recipe\nerror: $e');
+      return [];
+    }  
+  }
+
+  Future<List<Map<String, dynamic>>> getRecipeDataAsMap() async {
+        final recipeDataList = await db.recipes.where().findAll();
+    _logger.info('Querying all recipe data');
+    final recipeDataMapList = recipeDataList.map((object) {
+      return {
+        'id': object.id,
+        'timestamp': object.timestamp,
+        'created_by': object.created_by,
+        'name': object.name,
+        'description': object.description,
+        'ingredients_json': object.ingredients_json,
+        'steps_json': object.steps_json,
+        'image_path': object.image_path
+      };
+    }).toList();
+    return recipeDataMapList;
+  }
+
+  Future<List<Map<String, dynamic>>> getRecipeDataSinceDateAsMap(DateTime date) async {
+        final recipeDataList = await db.recipes.where().filter().timestampGreaterThan(date).findAll();
+    _logger.info('Querying all recipe data');
+    final recipeDataMapList = recipeDataList.map((object) {
+      return {
+        'id': object.id,
+        'timestamp': object.timestamp,
+        'created_by': object.created_by,
+        'name': object.name,
+        'description': object.description,
+        'ingredients_json': object.ingredients_json,
+        'steps_json': object.steps_json,
+        'image_path': object.image_path
+      };
+    }).toList();
+    return recipeDataMapList;
+  }
+
+  Future<int> insertExport(Export data) async {
+        var id = -1;
+    try {
+      db.writeTxn(() async {
+        id = await db.exports.put(data); // insert & update
+      });
+      _logger.info('Inserted sleep data with id: $id');
+      return id;
+    } catch (e) {
+      _logger.severe('Error inserting ingredient with data: $data \nerror: $e');
+      return 0;
+    }  
+  }
+
+  Future<void> updateExport(Export data) async {
+        var id = -1;
+    try {
+      db.writeTxn(() async {
+        await db.exports.put(data); // insert & update
+      });
+      _logger.info('Inserted sleep data with id: $id');
+    } catch (e) {
+      _logger.severe('Error inserting ingredient with data: $data \nerror: $e');
+    }  
+  }
+
+  Future<bool> deleteExport(int id) async {
+    try{
+          _logger.info('Deleting ingredient data with id: $id');
+      final success = await db.sleeps.delete(id);
+      return success;
+    }  catch (e) {
+      _logger.severe('Error deleting ingredient with id: $id \nerror: $e');
+      return false;
+    }  
+    
+  }
+
+  Future<List<Export>> getExports() async {
+    try {
+          final result = await db.exports.where().findAll();    
+      return result;
+    } catch (e) {
+      _logger.severe('Error getting export\nerror: $e');
+      return [];
+    }  
+  }
+
+  Future<List<Map<String, dynamic>>> getExportDataAsMap() async {
+        final exportDataList = await db.exports.where().findAll();
+    _logger.info('Querying all export data');
+    final exportDataMapList = exportDataList.map((object) {
+      return {
+        'id': object.id,
+        'timestamp': object.timestamp,
+        'table': object.table,
+        'type': object.type
+      };
+    }).toList();
+    return exportDataMapList;
+  }
+
+  Future<List<Map<String, dynamic>>> getExportDataSinceDateAsMap(DateTime date) async {
+        final exportDataList = await db.exports.where().filter().timestampGreaterThan(date).findAll();
+    _logger.info('Querying all export data');
+    final exportDataMapList = exportDataList.map((object) {
+      return {
+        'id': object.id,
+        'timestamp': object.timestamp,
+        'table': object.table,
+        'type': object.type
+      };
+    }).toList();
+    return exportDataMapList;
+  }
+
+  Future<DateTime> getLastIncrementalExportByTable(String table) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      db = await Isar.open([ExportSchema], directory: directory.path);
+      final result = await db.exports.where().filter().
+        tableEqualTo(table).
+        typeEqualTo('incremental').
+        timestampProperty().max();    
+      return result ?? DateTime.fromMillisecondsSinceEpoch(0);
+    } catch (e) {
+      _logger.severe('Error getting export\nerror: $e');
+      return DateTime.now();
+    }  
+  }
 }
  

@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 class ImageSelector extends StatefulWidget {
   final Function(File?) onImageSelected;
 
-  ImageSelector({required this.onImageSelected});
+  const ImageSelector({super.key, required this.onImageSelected});
 
   @override
   _ImageSelectorState createState() => _ImageSelectorState();
@@ -45,18 +45,18 @@ class _ImageSelectorState extends State<ImageSelector> {
               height: 200,
               fit: BoxFit.cover,
             ))
-          : SizedBox.shrink(),
-        SizedBox(height: 8),
+          : const SizedBox.shrink(),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             ElevatedButton(
               onPressed: () => _pickImage(ImageSource.camera),
-              child: Text('📷'),
+              child: const Text('📷'),
             ),
             ElevatedButton(
               onPressed: () => _pickImage(ImageSource.gallery),
-              child: Text('🖼️'),
+              child: const Text('🖼️'),
             ),
           ],
         ),

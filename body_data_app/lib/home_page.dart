@@ -1,28 +1,27 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:intl/intl.dart';
-import 'poop_entry_dialog.dart';
-import 'poop_data_page.dart';
-import 'medicine_entry_dialog.dart';
-import 'medicine_data_page.dart';
-import 'food_entry_dialog.dart';
-import 'food_data_page.dart';
-import 'mood_entry_dialog.dart';
-import 'mood_data_page.dart';
-import 'journal_entry_dialog.dart';
-import 'journal_data_page.dart';
-import 'sleep_entry_dialog.dart';
-import 'sleep_options_dialog.dart';
-import 'sleep_data_page.dart';
-import 'thought_entry_dialog.dart';
-import 'thought_data_page.dart';
-import 'thought_options_dialog.dart';
+import 'poop/poop_entry_dialog.dart';
+import 'poop/poop_data_page.dart';
+import 'medicine/medicine_entry_dialog.dart';
+import 'medicine/medicine_data_page.dart';
+import 'food/food_entry_dialog.dart';
+import 'food/food_data_page.dart';
+import 'mood/mood_entry_dialog.dart';
+import 'mood/mood_data_page.dart';
+import 'journal/journal_entry_dialog.dart';
+import 'journal/journal_data_page.dart';
+import 'sleep/sleep_entry_dialog.dart';
+import 'sleep/sleep_options_dialog.dart';
+import 'sleep/sleep_data_page.dart';
+import 'thought/thought_entry_dialog.dart';
+import 'thought/thought_data_page.dart';
+import 'thought/thought_options_dialog.dart';
 import 'database_helper.dart';
 import 'package:logging/logging.dart';
+import 'models/sleep.dart';
+import 'models/thought.dart';
 
 class BodyDataHomePage extends StatefulWidget {
-  BodyDataHomePage({Key? key}) : super(key: key);
+  const BodyDataHomePage({super.key});
 
   @override
   _BodyDataHomePageState createState() => _BodyDataHomePageState();
@@ -34,7 +33,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   Color foodButtonColor = Colors.yellow;
   Color moodButtonColor = Colors.green;
   Color journalButtonColor = Colors.blue;
-  Color thoughtButtonColor = Color(0xFF8A2BE2);
+  Color thoughtButtonColor = const Color(0xFF8A2BE2);
   Color sleepButtonColor = Colors.indigo;
   
   bool isSleepButtonActive = false;
@@ -47,6 +46,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void initState() {
     super.initState();
     _logger.info("HomePage initialized");
+    _checkAndRunFunctions();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final lifecycleState = WidgetsBinding.instance.lifecycleState;
@@ -59,7 +59,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
 
   @override
   void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -97,130 +97,28 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
 
   void _cancelSleep(BuildContext context) async {
     final dbHelper = DatabaseHelper();
-    final int? id = await dbHelper.getMaxSleepLogId();
-    if (id != null) {
-      await dbHelper.deleteSleepData(id);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sleep Canceled')),
-      );
+    final int id = await dbHelper.getMaxSleepLogId();
+    await dbHelper.deleteSleepData(id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Sleep Canceled')),
+    );
     }
-  }
 
   void _checkAndShowSleepDialog() async {
     _logger.info("Checking STILL_ASLEEP value");
-    final db = await DatabaseHelper().database;
-    await db.execute('DROP TABLE journal_data');
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS sleep_data (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT,
-        sleep_time TEXT,
-        wake_time TEXT,
-        dream_log TEXT,
-        STILL_ASLEEP INTEGER
-      )
-    ''');
-    await db.execute('''
-          CREATE TABLE IF NOT EXISTS poop_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            bristol_rating INTEGER,
-            urgency INTEGER,
-            blood BOOLEAN
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS medicine_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            medicine_name TEXT,
-            dosage TEXT,
-            unit TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS food_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            description TEXT,
-            image_path TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS mood_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            rating INTEGER,
-            moods TEXT,
-            note TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS journal_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            entry TEXT,
-            image_path TEXT,
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS export_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            export_type TEXT,
-            last_export TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS sleep_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            sleep_time TEXT,
-            wake_time TEXT,
-            dream_log TEXT,
-            STILL_ASLEEP INTEGER
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS thought_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            start_time TEXT,
-            end_time TEXT,
-            length INTEGER,
-            depth INTEGER,
-            thought_log TEXT,
-            STILL_THINKING INT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE IF NOT EXISTS ingredients (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            created_at TEXT,
-            last_used TEXT,
-            name TEXT,
-            category TEXT,
-            icon TEXT
-          )
-        ''');
-    final List<Map<String, dynamic>> sleepLogs = await db.query(
-      'sleep_data',
-      where: 'STILL_ASLEEP = ?',
-      whereArgs: [1],
-      orderBy: 'timestamp DESC',
-      limit: 1,
-    );
+    final dbHelper = DatabaseHelper();
+    var sleepLog = await dbHelper.getStillAsleepEntry();
 
-    if (sleepLogs.isNotEmpty) {
+    if (sleepLog != null ) {
       _logger.info("STILL_ASLEEP is true");
-      final sleepLog = sleepLogs.first;
-      final sleepLogId = sleepLog['id'];
-      final sleepTime = DateTime.parse(sleepLog['sleep_time']);
+      final sleepLogId = sleepLog.id;
+      final sleepTime = sleepLog.sleep_time;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
           context: context,
           builder: (context) {
-            return SleepEntryDialog();
+            return const SleepEntryDialog();
           },
         );
       });
@@ -229,17 +127,16 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   
   void _insertSleepData(BuildContext context) async {
     
-    String currentTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-    final sleepData = {
-      'timestamp': currentTime,
-      'sleep_time': currentTime,
-      'wake_time': null,
-      'dream_log': null,
-      'STILL_ASLEEP': 1
-    };
+    final currentTime = DateTime.now();
+    Sleep sleepData = Sleep();
+    sleepData.timestamp = currentTime;
+    sleepData.sleep_time = currentTime; 
+    sleepData.location = null;
+    sleepData.STILL_ASLEEP = true;
+
     await DatabaseHelper().insertSleepData(sleepData);
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Sleep Time Started, tap again to cancel'),
     ));
   }
@@ -260,46 +157,25 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
 
   void _cancelThought(BuildContext context) async {
     final dbHelper = DatabaseHelper();
-    final int? id = await dbHelper.getMaxThoughtLogId();
-    if (id != null) {
-      await dbHelper.deleteThoughtData(id);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Thought Canceled')),
-      );
+    final int id = await dbHelper.getMaxThoughtLogId();
+    await dbHelper.deleteThoughtData(id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Thought Canceled')),
+    );
     }
-  }
 
   void _checkAndShowThoughtDialog() async {
     _logger.info("Checking STILL_THINKING value");
-    final db = await DatabaseHelper().database;
-    await db.execute('DROP TABLE thought_data');
-    await db.execute('''
-          CREATE TABLE IF NOT EXISTS thought_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            start_time TEXT,
-            end_time TEXT,
-            length INTEGER,
-            depth INTEGER,
-            thought_log TEXT,
-            STILL_THINKING INT
-          )
-        ''');
-    final List<Map<String, dynamic>> thoughtLogs = await db.query(
-      'thought_data',
-      where: 'STILL_THINKING = ?',
-      whereArgs: [1],
-      orderBy: 'timestamp DESC',
-      limit: 1,
-    );
+    final dbHelper = DatabaseHelper();
+    final thought = await dbHelper.getStillThinkingEntry();
 
-    if (thoughtLogs.isNotEmpty) {
+    if (thought != null) {
       _logger.info("STILL THINKING is true");
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
           context: context,
           builder: (context) {
-            return ThoughtEntryDialog();
+            return const ThoughtEntryDialog();
           },
         );
       });
@@ -308,19 +184,21 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
 
 
   void _insertThoughtData(BuildContext context) async {
-    String currentTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+    final currentTime = DateTime.now();
 
-    Map<String, dynamic> thoughtData = {
-        'timestamp': currentTime,
-        'length': null,
-        'depth': null,
-        'thought_log': null,
-        'STILL_THINKING': 1
-      };
+    var thoughtData = Thought();
+    thoughtData.timestamp = currentTime;
+    thoughtData.start_time = currentTime;
+    thoughtData.end_time = null;
+    thoughtData.length = null;
+    thoughtData.depth = null;
+    thoughtData.thought_log = '';
+    thoughtData.location = null;
+    thoughtData.STILL_THINKING = true;
     
     await DatabaseHelper().insertThoughtData(thoughtData);
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Thought Time Started, tap again to cancel'),
     ));
   }
@@ -328,7 +206,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void _navigateToPoopDataPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PoopDataPage(),
+        builder: (context) => const PoopDataPage(),
       ),
     );
   }
@@ -336,7 +214,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void _navigateToMedicineDataPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => MedicineDataPage(),
+        builder: (context) => const MedicineDataPage(),
       ),
     );
   }
@@ -344,7 +222,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void _navigateToFoodDataPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => FoodDataPage(),
+        builder: (context) => const FoodDataPage(),
       ),
     );
   }
@@ -352,7 +230,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void _navigateToMoodDataPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => MoodDataPage(),
+        builder: (context) => const MoodDataPage(),
       ),
     );
   }
@@ -360,7 +238,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void _navigateToJournalDataPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => JournalDataPage(),
+        builder: (context) => const JournalDataPage(),
       ),
     );
   }
@@ -368,7 +246,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void _navigateToSleepDataPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => SleepDataPage(),
+        builder: (context) => const SleepDataPage(),
       ),
     );
   }
@@ -376,7 +254,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void _navigateToThoughtDataPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ThoughtDataPage(),
+        builder: (context) => const ThoughtDataPage(),
       ),
     );
   }
@@ -414,31 +292,31 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
             },
             itemBuilder: (BuildContext context) {
               return [
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Sleep Data',
                   child: Text('Sleep Data'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Thought Data',
                   child: Text('Thought Data'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Journal Data',
                   child: Text('Journal Data'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Mood Data',
                   child: Text('Mood Data'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Food Data',
                   child: Text('Food Data'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Medicine Data',
                   child: Text('Medicine Data'),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'Poop Data',
                   child: Text('Poop Data'),
                 ),   
@@ -451,7 +329,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Center(
+            const Center(
               child: Text(
               'Body Data',
                 style: TextStyle(
@@ -478,45 +356,45 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
                       ElevatedButton(
                         // onPressed: () => _toggleSleepButton(),
                         onPressed: isSleepButtonActive ? () => _toggleSleepButton() : () => _openSleepOptionsDialog(context),
-                        child: Text('😴'),
                         style: ElevatedButton.styleFrom(backgroundColor: isSleepButtonActive ? sleepButtonColor : sleepButtonColor.withOpacity(0.5)),
+                        child: const Text('😴'),
                       ),
-                      SizedBox(height: 7),
+                      const SizedBox(height: 7),
                       ElevatedButton(
                         onPressed: isThoughtButtonActive ? () => _toggleThoughtButton() : () => _openThoughtOptionsDialog(context),
-                        child: Text('🧠'),
                         style: ElevatedButton.styleFrom(backgroundColor: isThoughtButtonActive ? thoughtButtonColor : thoughtButtonColor.withOpacity(0.5)),
+                        child: const Text('🧠'),
                       ),
-                      SizedBox(height: 7),
+                      const SizedBox(height: 7),
                       ElevatedButton(
                         onPressed: () => _openJournalDialog(context),
-                        child: Text('📝'),
                         style: ElevatedButton.styleFrom(backgroundColor: journalButtonColor.withOpacity(0.5)),
+                        child: const Text('📝'),
                       ),
-                      SizedBox(height: 7),
+                      const SizedBox(height: 7),
                       
                       ElevatedButton(
                         onPressed: () => _openMoodDialog(context),
-                        child: Text('🎭'),
                         style: ElevatedButton.styleFrom(backgroundColor: moodButtonColor.withOpacity(0.5)),
+                        child: const Text('🎭'),
                       ), 
-                      SizedBox(height: 7),
+                      const SizedBox(height: 7),
                       ElevatedButton(
                         onPressed: () => _openFoodDialog(context),
-                        child: Text('🥣'),
                         style: ElevatedButton.styleFrom(backgroundColor: foodButtonColor.withOpacity(0.5)),
+                        child: const Text('🥣'),
                       ),
-                      SizedBox(height: 7),
+                      const SizedBox(height: 7),
                       ElevatedButton(
                         onPressed: () => _openMedicineDialog(context),
-                        child: Text('⚕️'),
                         style: ElevatedButton.styleFrom(backgroundColor: medicineButtonColor.withOpacity(0.5)),
+                        child: const Text('⚕️'),
                       ),
-                      SizedBox(height: 7),
+                      const SizedBox(height: 7),
                       ElevatedButton(
                         onPressed: () => _openPoopDialog(context),
-                        child: Text('💩'),
                         style: ElevatedButton.styleFrom(backgroundColor: poopButtonColor.withOpacity(0.5)),
+                        child: const Text('💩'),
                       ),               
                     ],
                   ),
@@ -533,7 +411,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return PoopEntryDialog();
+        return const PoopEntryDialog();
       },
     );
   }
@@ -542,7 +420,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return MedicineEntryDialog();
+        return const MedicineEntryDialog();
       },
     );
   }
@@ -551,7 +429,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return FoodEntryDialog();
+        return const FoodEntryDialog();
       },
     );
   }
@@ -560,7 +438,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return MoodEntryDialog();
+        return const MoodEntryDialog();
       },
     );
   }
@@ -569,7 +447,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return JournalEntryDialog();
+        return const JournalEntryDialog();
       },
     );
   }

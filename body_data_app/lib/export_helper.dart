@@ -1,57 +1,50 @@
+
+import 'package:body_data_app/models/export.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
 import 'database_helper.dart';
 import 'package:csv/csv.dart';
 import 'dart:io';
 
 class ExportHelper {
   static Future<String> exportData({required String table, required bool isFullExport}) async {
-    final db = await DatabaseHelper().database;
+    DatabaseHelper db = DatabaseHelper();
 
     // Determine export type
     String query;
     String exportType;
+    Future<List> data;
+    List<Map<String, dynamic>> mapData = [];
     if (isFullExport) {
-      query = 'SELECT * FROM poop_data'; // Replace with your table name
-      exportType = 'full';
+      data = db.getAllFromTable(table);
+      exportType = "full";
+      mapData = await db.getAllDataFromTableAsMap(table);
     } else {
-      query = '''
-        SELECT * FROM poop_data 
-        WHERE timestamp > (
-          SELECT COALESCE(MAX(last_export), '1970-01-01T00:00:00.000') 
-          FROM export_log 
-          WHERE export_type = "incremental"
-        )
-      ''';
-      exportType = 'incremental';
+      var lastExport = await db.getLastIncrementalExportByTable(table);
+      mapData = await db.getAllFromTableSinceDateAsMap(table, lastExport);
+      exportType = "incremental";
     }
 
-    // Fetch data
-    List<Map<String, dynamic>> data = await db.rawQuery(query);
-
-    // Convert data to CSV
     List<List<dynamic>> csvData = [
-      data.first.keys.toList(), // headers
-      ...data.map((row) => row.values.toList())
+      mapData.first.keys.toList(), // headers
+      ...mapData.map((row) => row.values.toList())
     ];
 
     String csv = const ListToCsvConverter().convert(csvData);
 
     // Get directory
     final directory = await getApplicationDocumentsDirectory();
-    final filePath = '${directory.path}/poop_data_$exportType\_${DateTime.now().millisecondsSinceEpoch}.csv';
+    final filePath = '${directory.path}/poop_data_${exportType}_${DateTime.now().millisecondsSinceEpoch}.csv';
 
     // Write to file
     final file = File(filePath);
     await file.writeAsString(csv);
 
     // Update export log
-    if (!isFullExport) {
-      await db.insert('export_log', {
-        'export_type': 'incremental',
-        'last_export': DateTime.now().toIso8601String(),
-      });
-    }
+    Export export = Export();
+    export.table = table;
+    export.type = exportType;
+    export.timestamp = DateTime.now();
+    db.insertExport(export);
 
     return filePath;
   }

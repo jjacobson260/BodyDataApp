@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:body_data_app/sleep_entry_dialog.dart';
+import 'package:body_data_app/sleep/sleep_entry_dialog.dart';
 
 void main() {
   testWidgets('SleepEntryDialog has required fields and buttons', (WidgetTester tester) async {
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: SleepEntryDialog())));
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SleepEntryDialog())));
 
     expect(find.text('Minutes to Sleep?'), findsOneWidget);
     expect(find.text('Dream Log'), findsOneWidget);
