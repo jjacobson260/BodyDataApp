@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 
 class BarcodeScannerWidget extends StatefulWidget {
@@ -13,6 +14,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
   bool _isProcessing = false;
   String? _barcodeResult;
 
+  final Logger _logger = Logger('BarcodeScannerWidget');
+
   @override
   void initState() {
     super.initState();
@@ -20,19 +23,23 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
   }
 
   Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    final camera = cameras.first;
+    try {
+      final cameras = await availableCameras();
+      final camera = cameras.first;
 
-    _cameraController = CameraController(
-      camera,
-      ResolutionPreset.medium,
-    );
+      _cameraController = CameraController(
+        camera,
+        ResolutionPreset.medium,
+      );
 
-    await _cameraController?.initialize();
+      await _cameraController?.initialize();
 
-    setState(() {});
+      setState(() {});
 
-    _cameraController?.startImageStream(_processCameraImage);
+      _cameraController?.startImageStream(_processCameraImage);
+    } catch (e) {
+      _logger.severe('Error initializing camera\nerror:$e');
+    }
   }
 
   Future<void> _processCameraImage(CameraImage image) async {
