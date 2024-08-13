@@ -19,11 +19,5 @@ tasks.register("clean", Delete) {
 
 dependencies {
 
-  // Build runner for code generation
-  developmentDependencies 'build_runner: ^2.4.11' // Replace with your desired version
-}
-
-buildRunner {
-  // Tells build_runner to generate code for Isar models
-  generateFor 'isar'
+  
 }

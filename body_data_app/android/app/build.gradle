@@ -65,6 +65,5 @@ flutter {
 }
 
 dependencies {
-    // Isar dependency
-    implementation 'com.isar:isar: ^3.1.0+1' // Replace with your desired version
 }
+
