@@ -17,7 +17,7 @@ class _ThoughtEntryDialogState extends State<ThoughtEntryDialog> {
   final _formKey = GlobalKey<FormState>();
   String _entry = '';
   int _depth = 1;
-  final int _length = 0;
+  int _length = 0;
 
   final Logger _logger = Logger('ThoughtEntryDialog');
 

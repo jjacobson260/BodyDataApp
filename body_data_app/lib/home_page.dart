@@ -46,6 +46,7 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
   void initState() {
     super.initState();
     _logger.info("HomePage initialized");
+    _checkAndRunFunctions();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final lifecycleState = WidgetsBinding.instance.lifecycleState;
