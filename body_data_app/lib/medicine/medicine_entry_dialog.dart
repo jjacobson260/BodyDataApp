@@ -162,8 +162,8 @@ class _MedicineEntryDialogState extends State<MedicineEntryDialog> {
                   },
                 ),
               TextFormField(
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Dosage'),
-                initialValue: _dosage.toString(),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the dosage';
