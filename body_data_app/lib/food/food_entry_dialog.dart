@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:body_data_app/models/food.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
+import '../barcode_scanner_widget.dart';
 import '../date_time_picker_dialog.dart'; 
 import '../image_selector_widget.dart';
 import 'ingredient_info.dart';
@@ -26,6 +27,15 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
 
   final picker = ImagePicker();
 
+  Future<void> _openBarcodeScanner() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => BarcodeScannerWidget()),
+    );
+
+    if (result != null) {
+      _descriptionController.text = result; // Use the result to prefill the description or handle it as needed.
+    }
+  }
 
   Future<void> _saveFoodData() async {
 
@@ -113,10 +123,19 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
               ),
               const SizedBox(height: 16),
               Center(
-                child: ElevatedButton(
-                  onPressed: _saveFoodData,
-                  child: const Text('Save'),
-                ),
+                child: Row (
+                  children: [
+                    ElevatedButton(
+                      onPressed: _openBarcodeScanner,
+                      child: const Text('Scan'),
+                    ),
+                    ElevatedButton(
+                      onPressed: _saveFoodData,
+                      child: const Text('Save'),
+                    ),
+                  ]
+                )
+                
               )          
             ],
           ),
