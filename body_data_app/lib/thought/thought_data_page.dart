@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../database_helper.dart';
 import 'thought_entry_dialog.dart';
+import 'package:intl/intl.dart';
 
 class ThoughtDataPage extends StatefulWidget {
   const ThoughtDataPage({super.key});
@@ -44,9 +45,8 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
     _fetchThoughtLogs();
   }
 
-  String _calculateThoughtMinutes(String timestamp) {
-    DateTime startDateTime = DateTime.parse(timestamp);
-    final duration = startDateTime.difference(DateTime.now());
+  String _calculateThoughtMinutes(DateTime timestamp) {
+    final duration = timestamp.difference(DateTime.now());
     int thoughtMinutes = duration.inMinutes;
     return thoughtMinutes.toStringAsFixed(2);
   }
@@ -61,7 +61,7 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
         itemCount: _thoughtLogs.length,
         itemBuilder: (context, index) {
           final log = _thoughtLogs[index];
-          final timestamp = log['timestamp'];
+          final timestamp = DateFormat('MM-dd-yy HH:mm').format(log['timestamp']);
           final length = log['length'];
           final thoughtMinutes = length != null ? _calculateThoughtMinutes(log['timestamp'],) : '';
           final depth = log['depth'];
