@@ -12,7 +12,7 @@ import 'journal/journal_data_page.dart';
 import 'sleep/sleep_entry_dialog.dart';
 import 'sleep/sleep_options_dialog.dart';
 import 'sleep/sleep_data_page.dart';
-import 'thought/thought_entry_dialog.dart';
+import 'thought/thought_log_dialog.dart';
 import 'thought/thought_data_page.dart';
 import 'thought/thought_options_dialog.dart';
 import 'database_helper.dart';
@@ -171,11 +171,12 @@ class _BodyDataHomePageState extends State<BodyDataHomePage> with WidgetsBinding
 
     if (thought != null) {
       _logger.info("STILL THINKING is true");
+      final id = thought.id;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
           context: context,
           builder: (context) {
-            return const ThoughtEntryDialog();
+            return ThoughtLogDialog(thoughtId: id);
           },
         );
       });

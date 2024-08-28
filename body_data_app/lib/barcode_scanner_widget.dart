@@ -4,13 +4,15 @@ import 'package:logging/logging.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 
 class BarcodeScannerWidget extends StatefulWidget {
+  const BarcodeScannerWidget({super.key});
+
   @override
   _BarcodeScannerWidgetState createState() => _BarcodeScannerWidgetState();
 }
 
 class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
   CameraController? _cameraController;
-  BarcodeScanner _barcodeScanner = BarcodeScanner();
+  final BarcodeScanner _barcodeScanner = BarcodeScanner();
   bool _isProcessing = false;
   String? _barcodeResult;
 
@@ -58,7 +60,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
         ),
       );
 
-      final List<Barcode> barcodes = await  await _barcodeScanner!.processImage(inputImage);
+      final List<Barcode> barcodes = await _barcodeScanner.processImage(inputImage);
 
       if (barcodes.isNotEmpty) {
         setState(() {
@@ -85,10 +87,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Barcode Scanner'),
+        title: const Text('Barcode Scanner'),
       ),
       body: _cameraController == null || !_cameraController!.value.isInitialized
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
                 CameraPreview(_cameraController!),
@@ -96,11 +98,11 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Container(
-                      padding: EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
                       color: Colors.black54,
                       child: Text(
                         'Barcode Result: $_barcodeResult',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
                       ),
                     ),
                   ),

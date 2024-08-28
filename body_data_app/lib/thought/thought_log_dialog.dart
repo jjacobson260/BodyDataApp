@@ -3,9 +3,12 @@ import 'package:logging/logging.dart';
 import '../database_helper.dart';
 import '../date_time_picker_dialog.dart';
 import '../models/thought.dart';
+import 'package:intl/intl.dart';
 
 class ThoughtLogDialog extends StatefulWidget {
-  const ThoughtLogDialog({super.key});
+  final int? thoughtId;
+
+  const ThoughtLogDialog({super.key, this.thoughtId});
 
   @override
   _ThoughtLogDialogState createState() => _ThoughtLogDialogState();
@@ -20,6 +23,31 @@ class _ThoughtLogDialogState extends State<ThoughtLogDialog> {
   DateTime _endThoughtTime = DateTime.now();
   int _depth = 1;
   String _thoughtLog = '';
+
+  String thoughtToString(Thought thought) {
+    var thoughtStr = """     timestamp: ${DateFormat('MM-dd-yy HH:mm').format(thought.timestamp)}
+    thought_log: ${thought.thought_log}
+    start_time: ${thought.start_time != null ? DateFormat('MM-dd-yy HH:mm').format(thought.start_time!) : ""}
+    end_time: ${thought.end_time != null ? DateFormat('MM-dd-yy HH:mm').format(thought.end_time!) : ""}
+    length: ${thought.length}
+    depth: ${thought.depth}
+    location: ${thought.location}
+    STILL_THINKING: ${thought.STILL_THINKING}
+    """;
+    return thoughtStr;
+  }
+
+  void _loadExistingThought(int thoughtId) async {
+    final existingThought = await db.getThoughtById(thoughtId);
+    if (existingThought != null) {
+      setState(() {
+        _startThoughtTime = existingThought.start_time ?? DateTime.now();
+        _endThoughtTime = existingThought.end_time ?? DateTime.now();
+        _depth = existingThought.depth ?? 1;
+        _thoughtLog = existingThought.thought_log ?? '';
+      });
+    }
+  }
 
   int calculateMinutesBetween(DateTime startDateTime, DateTime endDateTime) {
     Duration difference = endDateTime.difference(startDateTime);
@@ -43,7 +71,7 @@ class _ThoughtLogDialogState extends State<ThoughtLogDialog> {
     thoughtData.thought_log = _thoughtLog;
     thoughtData.location = null;
     thoughtData.STILL_THINKING = false;
-    _logger.info("updating thought id: ${thoughtData.id} with data: $thoughtData");
+    _logger.info("updating thought id: ${thoughtData.id} with data: ${thoughtToString(thoughtData)}");
     await DatabaseHelper().updateThoughtData(thoughtData);
     Navigator.of(context).pop();
   }

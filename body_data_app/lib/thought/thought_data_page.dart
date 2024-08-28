@@ -69,7 +69,7 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
 
           return Card(
             child: ListTile(
-              title: Text('$timestamp'),
+              title: Text(timestamp),
               subtitle: Text('length: $length \ndepth: $depth \nThought Log: $thoughtLog'),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,

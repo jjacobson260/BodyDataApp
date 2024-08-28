@@ -29,7 +29,7 @@ class _FoodEntryDialogState extends State<FoodEntryDialog> {
 
   Future<void> _openBarcodeScanner() async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => BarcodeScannerWidget()),
+      MaterialPageRoute(builder: (context) => const BarcodeScannerWidget()),
     );
 
     if (result != null) {

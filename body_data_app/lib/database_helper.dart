@@ -893,6 +893,16 @@ class DatabaseHelper {
 
   }
 
+  Future<Thought?> getThoughtById(int id) async {
+    try {
+      final result = await db.thoughts.where().idEqualTo(id).findFirst();
+      return result;
+    } catch (e) {
+      _logger.warning("No thoughts with id: $id");
+      return null;
+    }
+  }
+
   Future<Thought?> getStillThinkingEntry() async {
     try {
       final result = await db.thoughts.where().filter().sTILL_THINKINGEqualTo(true).findFirst();
