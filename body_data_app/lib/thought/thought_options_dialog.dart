@@ -26,7 +26,7 @@ class ThoughtOptionsDialog extends StatelessWidget {
               Navigator.of(context).pop();
               _showLogThoughtDialog(context);
             },
-            child: const Text('Log Thinking'),
+            child: const Text('Log Thought'),
           ),
         ],
       ),

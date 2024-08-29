@@ -255,8 +255,11 @@ class DatabaseHelper {
 
   Future<bool> deletePoopData(int id) async {
     try {
-      _logger.info('Deleting poop data with id: $id');
-      final success = await db.poops.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting poop data with id: $id');
+        success = await db.poops.delete(id);
+      });
       return success;
     } catch (e) {
       _logger.severe('Error deleting poop with id: $id \nerror: $e');
@@ -439,8 +442,11 @@ class DatabaseHelper {
 
   Future<bool> deleteMedicineData(int id) async {
     try {
-      _logger.info('Deleting medicine data with id: $id');
-      final success = await db.medicines.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting medicine data with id: $id');
+        success = await db.medicines.delete(id);
+      });
       return success;
     } catch (e) {
       _logger.severe('Error deleting medicine data with id: $id\nerror: $e');
@@ -532,8 +538,11 @@ class DatabaseHelper {
 
   Future<bool> deleteFoodData(int id) async {
     try {
-      _logger.info('Deleting food data with id: $id');
-      final success = await db.foods.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting food data with id: $id');
+        success = await db.foods.delete(id);
+      });
       return success;
     } catch (e) {
       _logger.severe('Error deleting food data: $id\nerror: $e');
@@ -666,8 +675,11 @@ class DatabaseHelper {
 
   Future<bool> deleteMoodData(int id) async {
     try {
-      _logger.info('Deleting mood data with id: $id');
-      final success = await db.moods.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting mood data with id: $id');
+        success = await db.moods.delete(id);
+      });
       return success;
     } catch (e) {
       _logger.severe('Error deleting mood data: $id\nerror: $e');
@@ -754,8 +766,11 @@ class DatabaseHelper {
 
   Future<bool> deleteJournalData(int id) async {
     try{
-      _logger.info('Deleting journal data with id: $id');
-      final success = await db.journals.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting journal data with id: $id');
+        success = await db.journals.delete(id);
+      });
       return success;
     } catch (e) {
       _logger.severe('Error deleting journal data: $id\nerror: $e');
@@ -851,8 +866,11 @@ class DatabaseHelper {
 
   Future<bool> deleteThoughtData(int id) async {
     try {
-      _logger.info('Deleting thought data with id: $id');
-      final success = await db.thoughts.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting thought data with id: $id');
+        success = await db.thoughts.delete(id);
+      });
       return success;
     } catch (e) {
       _logger.severe('Error deleting thought: $id \nerror: $e');
@@ -873,6 +891,16 @@ class DatabaseHelper {
       return 0;  // Return 0 in case of error
     }
 
+  }
+
+  Future<Thought?> getThoughtById(int id) async {
+    try {
+      final result = await db.thoughts.where().idEqualTo(id).findFirst();
+      return result;
+    } catch (e) {
+      _logger.warning("No thoughts with id: $id");
+      return null;
+    }
   }
 
   Future<Thought?> getStillThinkingEntry() async {
@@ -968,8 +996,11 @@ class DatabaseHelper {
 
   Future<bool> deleteSleepData(int id) async {
     try {
-      _logger.info('Deleting sleep data with id: $id');
-      final success = await db.sleeps.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting sleep data with id: $id');
+        success = await db.sleeps.delete(id);
+      });
       return success;
     } catch (e) {
       _logger.severe('Error deleting sleep data: $id \nerror: $e');
@@ -1029,8 +1060,11 @@ class DatabaseHelper {
 
   Future<bool> deleteIngredient(int id) async {
     try{
-      _logger.info('Deleting ingredient data with id: $id');
-      final success = await db.sleeps.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting ingredient data with id: $id');
+        success = await db.sleeps.delete(id);
+      });
       return success;
     }  catch (e) {
       _logger.severe('Error deleting ingredient with id: $id \nerror: $e');
@@ -1041,7 +1075,7 @@ class DatabaseHelper {
 
   Future<bool> useIngredient(Ingredient ingredient) async {
     try{
-          ingredient.last_used = DateTime.now();
+      ingredient.last_used = DateTime.now();
       updateIngredient(ingredient);
       return true;
     } catch (e) {
@@ -1104,7 +1138,7 @@ class DatabaseHelper {
 
   Future<List<Ingredient>> getIngredientsByRecency() async {
     try {
-          final result = await db.ingredients.where().sortByTimestampDesc().findAll();    
+      final result = await db.ingredients.where().sortByTimestampDesc().findAll();    
       return result;
     } catch (e) {
       _logger.severe('Error getting ingredients by recency\nerror: $e');
@@ -1114,7 +1148,7 @@ class DatabaseHelper {
 
   Future<List<Ingredient>> getIngredientsCategoryByRecency(String category) async {
     try {
-          final result = await db.ingredients.where().filter().categoryEqualTo(category).sortByTimestampDesc().findAll();    
+      final result = await db.ingredients.where().filter().categoryEqualTo(category).sortByTimestampDesc().findAll();    
       return result;
     } catch (e) {
       _logger.severe('Error getting ingredient category by recency\nerror: $e');
@@ -1139,7 +1173,7 @@ class DatabaseHelper {
   }
 
   Future<int> insertRecipe(Recipe data) async {
-        var id = -1;
+    var id = -1;
     try {
       db.writeTxn(() async {
         id = await db.recipes.put(data); // insert & update
@@ -1153,7 +1187,7 @@ class DatabaseHelper {
   }
 
   Future<void> updateRecipe(Recipe data) async {
-        var id = -1;
+    var id = -1;
     try {
       db.writeTxn(() async {
         await db.recipes.put(data); // insert & update
@@ -1166,8 +1200,11 @@ class DatabaseHelper {
 
   Future<bool> deleteRecipe(int id) async {
     try{
-          _logger.info('Deleting ingredient data with id: $id');
-      final success = await db.sleeps.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting ingredient data with id: $id');
+        success = await db.sleeps.delete(id);
+      });
       return success;
     }  catch (e) {
       _logger.severe('Error deleting ingredient with id: $id \nerror: $e');
@@ -1178,7 +1215,7 @@ class DatabaseHelper {
 
   Future<List<Recipe>> getRecipes() async {
     try {
-          final result = await db.recipes.where().findAll();    
+      final result = await db.recipes.where().findAll();    
       return result;
     } catch (e) {
       _logger.severe('Error getting recipe\nerror: $e');
@@ -1187,7 +1224,7 @@ class DatabaseHelper {
   }
 
   Future<List<Map<String, dynamic>>> getRecipeDataAsMap() async {
-        final recipeDataList = await db.recipes.where().findAll();
+    final recipeDataList = await db.recipes.where().findAll();
     _logger.info('Querying all recipe data');
     final recipeDataMapList = recipeDataList.map((object) {
       return {
@@ -1205,7 +1242,7 @@ class DatabaseHelper {
   }
 
   Future<List<Map<String, dynamic>>> getRecipeDataSinceDateAsMap(DateTime date) async {
-        final recipeDataList = await db.recipes.where().filter().timestampGreaterThan(date).findAll();
+    final recipeDataList = await db.recipes.where().filter().timestampGreaterThan(date).findAll();
     _logger.info('Querying all recipe data');
     final recipeDataMapList = recipeDataList.map((object) {
       return {
@@ -1223,7 +1260,7 @@ class DatabaseHelper {
   }
 
   Future<int> insertExport(Export data) async {
-        var id = -1;
+    var id = -1;
     try {
       db.writeTxn(() async {
         id = await db.exports.put(data); // insert & update
@@ -1237,7 +1274,7 @@ class DatabaseHelper {
   }
 
   Future<void> updateExport(Export data) async {
-        var id = -1;
+    var id = -1;
     try {
       db.writeTxn(() async {
         await db.exports.put(data); // insert & update
@@ -1250,8 +1287,11 @@ class DatabaseHelper {
 
   Future<bool> deleteExport(int id) async {
     try{
-          _logger.info('Deleting ingredient data with id: $id');
-      final success = await db.sleeps.delete(id);
+      var success = false;
+      db.writeTxn(() async {
+        _logger.info('Deleting ingredient data with id: $id');
+        success = await db.sleeps.delete(id);
+      });
       return success;
     }  catch (e) {
       _logger.severe('Error deleting ingredient with id: $id \nerror: $e');
@@ -1271,7 +1311,7 @@ class DatabaseHelper {
   }
 
   Future<List<Map<String, dynamic>>> getExportDataAsMap() async {
-        final exportDataList = await db.exports.where().findAll();
+    final exportDataList = await db.exports.where().findAll();
     _logger.info('Querying all export data');
     final exportDataMapList = exportDataList.map((object) {
       return {
