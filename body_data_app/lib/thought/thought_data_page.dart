@@ -1,6 +1,7 @@
+import 'package:body_data_app/thought/thought_log_dialog.dart';
 import 'package:flutter/material.dart';
 import '../database_helper.dart';
-import 'thought_entry_dialog.dart';
+import 'thought_log_dialog.dart';
 import 'package:intl/intl.dart';
 
 class ThoughtDataPage extends StatefulWidget {
@@ -28,12 +29,10 @@ class _ThoughtDataPageState extends State<ThoughtDataPage> {
   }
 
   void _editThoughtLog(Map<String, dynamic> thoughtLog) async {
-    final thoughtLogId = thoughtLog['id'];
-    final length = DateTime.parse(thoughtLog['length']);
     await showDialog(
       context: context,
       builder: (context) {
-        return const ThoughtEntryDialog();
+        return ThoughtLogDialog(thoughtId: thoughtLog.id);
       },
     );
     _fetchThoughtLogs();
